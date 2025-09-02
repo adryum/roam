@@ -1,30 +1,47 @@
 # website
 
-This template should help get you started developing with Vue 3 in Vite.
+## Izmantotās tehnoloģijas
+### Server
+freimworki - Express.js
+<br>middleware - Molter
+<br>db - MYSQL
+<br>bilžu mākonis - Cloudinary
 
-## Recommended IDE Setup
+### Website
+MVVM paterns - https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel 
+<br>Valodas - HTML, CSS, SASS
+<br>freimworki - Vue, Axios, FramerMotion
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
+### Abos
+Valoda - TypeScript
+<br>Konfigurācija - .env
 
 ## Project Setup
+Lai uzinstalētu visus vajadzīgos dependencijus Jums ROAM FOLDERA TERMINĀLĪ jeb NO PROJEKTA ROOT ir jāpalaiž šis divas komandas.
 
 ```sh
-npm install
+cd server && npm install
+```
+```sh
+cd website && npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Palaist mājaslapu
+Lai palaistu mājaslapu palaidiet šo komandu WEBSITE FOLDERĪ.
 
 ```sh
 npm run dev
 ```
+
+### Palaist serveri
+Lai palaistu mājaslapu palaidiet šo komandu SERVER FOLDERĪ.
+
+```sh
+npm nodemon src/index.ts
+```
+
+
+
 
 ### Type-Check, Compile and Minify for Production
 
