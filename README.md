@@ -17,6 +17,9 @@ Valoda - TypeScript
 <br>Konfigurācija - .env
 
 ## Project Setup
+
+!! Iekš Visual Studio Code Extensions sekcijas, vajag installēt Vue (Official) paplašinājumu, savādāk main.ts mēdz čīkstēt, ka nav dependencies !!
+
 Lai uzinstalētu visus vajadzīgos dependencijus Jums ROAM FOLDERA TERMINĀLĪ jeb NO PROJEKTA ROOT ir jāpalaiž šis divas komandas.
 
 ```sh
