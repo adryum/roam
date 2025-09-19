@@ -37,10 +37,11 @@ npm run dev
 ```
 
 ### Palaist serveri
-Lai palaistu mājaslapu palaidiet šo komandu SERVER FOLDERĪ.
+Lai palaistu mājaslapu palaidiet šo komandu Root folderī.
 
 ```sh
-npm nodemon src/index.ts
+cd server
+npx nodemon src/index.ts
 ```
 
 
