@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import { logIncomingRequests } from './Utils';
@@ -19,4 +22,6 @@ logIncomingRequests(app);
 
 app.use("/walkers", walkerRoute)
 
-app.listen(5000)
+app.listen(5000, () => {
+  console.log('Server running on http://localhost:5000');
+});
