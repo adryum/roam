@@ -15,11 +15,15 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "@vueuse/core": "^13.9.0",
     "axios": "^1.11.0",
     "dotenv": "^17.2.1",
+    "leaflet": "^1.9.4",
     "motion-v": "^1.7.1",
     "pinia": "^3.0.3",
+    "sass": "^1.92.1",
+    "v-calendar": "^3.1.2",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
   },
