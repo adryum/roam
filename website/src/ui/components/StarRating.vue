@@ -3,7 +3,7 @@
     <div class="stars back">
       <img src="/assets/star_gray.png" v-for="n in 5" :key="'b'+n" class="star" />
     </div>
-    <div class="stars front" :style="{ width: pct }">
+    <div class="stars front" :style="{ width: star_rating_percentage }">
       <img src="/assets/star.png" v-for="n in 5" :key="'f'+n" class="star" />
     </div>
   </div>
@@ -12,21 +12,20 @@
 <script setup>
 import { computed } from 'vue'
 
-// Only call defineProps once
 const props = defineProps({
   value: { type: Number, required: true }
 })
 
-const pct = computed(() => (Math.max(0, Math.min(5, props.value)) / 5) * 100 + '%')
+const star_rating_percentage = computed(() => (Math.max(0, Math.min(5, props.value)) / 5) * 100 + '%')
 </script>
 
 
 <style scoped>
-/* simple star visuals */
+
 .star-rating {
   position: relative;
   display: inline-block;
-  width: calc(5 * 24px); /* 5 stars, 24px each */
+  width: calc(5 * 24px);
   height: 24px;
 }
 

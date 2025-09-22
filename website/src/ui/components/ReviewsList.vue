@@ -6,11 +6,14 @@
         <StarRating :value="r.rating" />
       </div>
       <div class="review-title">{{ r.title }}</div>
-      <div class="review-body">{{ r.content }}</div>
+      <div class="review-content">
+        <div class="review-body">{{ r.content }}</div>
+        <div class="review-date">{{ r.date }}</div>
+      </div>
     </li>
   </ul>
   <div class="reviews-action" v-if="reviews.length > 3">
-    <button @click="showAll = !showAll">{{ showAll ? 'Show less' : 'Show more' }}</button>
+    <button class="show-reviews-btn" @click="showAll = !showAll">{{ showAll ? 'Show less' : 'Show more' }}</button>
   </div>
 </template>
 
@@ -18,7 +21,6 @@
 import { ref, computed } from 'vue'
 import StarRating from './StarRating.vue'
 
-// Capture props in a variable
 const props = defineProps({
   reviews: {
     type: Array,
@@ -29,7 +31,6 @@ const props = defineProps({
 // Show/hide more reviews
 const showAll = ref(false)
 
-// Compute visible reviews
 const visibleReviews = computed(() => {
   const arr = props.reviews || []
   return showAll.value ? arr : arr.slice(0, 3)
@@ -38,5 +39,52 @@ const visibleReviews = computed(() => {
 
 
 <style scoped>
-.reviews { width:100%; max-width:980px; margin-top:8px; text-align:left; } .reviews h2 { font-size:22px; margin-bottom:12px; text-align:center; } .review-list { list-style:none; padding:0; margin:0; display:grid; gap:12px; } .review { background:#fff; padding:12px 14px; border-radius:10px; border:1px solid #eee; } .review-head { display:flex; justify-content:space-between; align-items:center; gap:12px; } .review-user { font-weight:700; } .review-title { margin-top:8px; font-weight:600; } .review-body { margin-top:6px; color:#444; }
+.reviews { 
+width:100%; 
+max-width:980px; 
+margin-top:8px; 
+text-align:left; } 
+.reviews h2 { 
+  font-size:22px; 
+  margin-bottom:12px; 
+  text-align:center; } 
+.review-list { 
+  list-style:none; 
+  padding:0; margin:0; 
+  display:grid; gap:12px; } 
+.review { 
+  background:#fff; 
+  padding:12px 14px; 
+  border-radius:10px; 
+  border:1px solid #eee; } 
+.review-head { display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  gap:12px; } 
+.review-user { font-weight:700; } 
+.review-content{
+  
+  margin-top:6px; 
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items:center; 
+  color:#444;
+}
+.review-date{
+  font-size: 14px;
+}
+.review-title { 
+  margin-top:8px; 
+  font-weight:600; }
+.show-reviews-btn{
+  background:#000000; 
+  color:#ffffff; 
+  align-self: stretch;
+  border-radius:8px; 
+  padding:10px 18px; 
+  border:0; 
+  cursor:pointer;
+  margin-top: 10px;
+}
 </style>

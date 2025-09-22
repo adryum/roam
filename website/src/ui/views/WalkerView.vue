@@ -17,7 +17,6 @@
             </div>
 
             <div class="map-wrapper" aria-label="Walker location map">
-              <!-- Keep your Map component — the wrapper enforces size -->
               <Map />
             </div>
           </div>
@@ -39,6 +38,7 @@ import { ref } from 'vue'
 const walker = ref({
   name: 'Ēriks Fūrmanis',
   photoUrl: '/assets/eriks.png',
+  shortDescription: "Komunikabls un liels suņu mīlis.",
   details: [
     '5 gadu pieredze',
     'Pieredzējis ar dažādu šķirņu suņiem',
@@ -47,11 +47,16 @@ const walker = ref({
     'Māca pamata pavadas disciplīnu'
   ],
   reviews: [
-    { user: 'Jonh Smith', rating: 5, title: '10/10 amazing', content: 'Loved the service.' },
-    { user: 'Jordan', rating: 4.5, title: 'Reliable', content: 'Very dependable and friendly.' },
-    { user: 'Priya', rating: 4, title: 'Good service', content: 'Great with pup.' },
-    { user: 'Luca', rating: 5, title: 'Fantastic', content: 'Perfect — photos after every walk.' },
-    { user: 'Maya', rating: 4, title: 'Nice', content: 'Professional and kind.' }
+    { user: 'Jonh Smith', date: '2025-05-02', rating: 5, title: '10/10 amazing', content: 'Loved the service.' },
+    { user: 'Jordan River', date: '2025-05-02', rating: 4.5, title: 'Reliable', content: 'Very dependable and friendly.' },
+    { user: 'Priya Mary', date: '2025-05-02', rating: 4, title: 'Good service', content: 'Great with pup.' },
+    { user: 'Luca Road', date: '2025-05-02', rating: 5, title: 'Fantastic', content: 'Perfect — photos after every walk.' },
+    { user: 'Maya Star', date: '2025-05-02', rating: 4, title: 'Nice', content: 'Professional and kind.' },
+    { user: 'Jason Todd', date: '2025-05-02', rating: 2, title: 'Bad', content: 'Awful service.' },
+    { user: 'Bruce Wayne', date: '2025-05-02', rating: 4.5, title: 'Satisfactory', content: 'yeah its good' },
+    { user: 'John Doe', date: '2025-05-02', rating: 4, title: 'Nice', content: 'yep' },
+    { user: 'Lex Luthor', date: '2025-05-02', rating: 5, title: 'Good', content: 'Superb!' },
+    { user: 'Clark Kent', date: '2025-05-02', rating: 4, title: 'Awesome!', content: 'Professional and kind.' }
   ]
 })
 </script>
@@ -67,7 +72,6 @@ const walker = ref({
   align-items: stretch;
 }
 
-/* content area: center but left-align content */
 .content {
   width: 100%;
   max-width: 1200px;
@@ -76,31 +80,36 @@ const walker = ref({
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   text-align: left;
 }
 
-/* Reviews section header */
+
 .reviews-section { margin-top: 20px; }
-.reviews-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.reviews-header { 
+  display:flex; 
+  align-items:center;
+  gap:12px; 
+  margin-bottom:12px; }
 .reviews-header h2 { margin:0; font-size:1.5rem; }
 
-/* Two-column layout */
 .reviews-grid {
+  
+  position: relative;
   display: flex;
   gap: 24px;
   align-items: flex-start;
 }
 
-/* Reviews column: flexible */
+
 .reviews-list {
   flex: 1 1 0;
-  min-width: 0; /* allow children to shrink properly */
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-/* Map column: fixed width (adjust as needed) */
+
 .map-wrapper {
   width: 420px;
   max-width: 42%;
@@ -110,10 +119,12 @@ const walker = ref({
   overflow: hidden;
   box-shadow: 0 6px 18px rgba(20,30,50,0.06);
   background: #fff;
+  position: sticky;
+  top: 20px; 
+  align-self: flex-start; 
 }
 
 
-/* Responsive: stack on narrow screens */
 @media (max-width: 900px) {
   .content { padding: 18px; }
   .reviews-grid { flex-direction: column; }

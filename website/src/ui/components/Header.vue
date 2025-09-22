@@ -23,5 +23,13 @@ a {
     color:white;
     text-decoration: none;
 }
-.header { width:100%; background:#b19665; color:#fff; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; box-sizing:border-box; }
+.header { 
+  width:100%;
+  background:#b19665; 
+  color:#fff; 
+  padding:14px 28px; 
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between; 
+  box-sizing:border-box; }
 </style>

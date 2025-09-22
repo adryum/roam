@@ -9,16 +9,6 @@ import { onMounted, ref } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-// Fix for broken marker assets
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-})
 
 const mapEl = ref(null)
 
@@ -34,5 +24,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.map-wrap { margin-top:16px; display:flex; justify-content:center; } .map { width:100%; max-width:980px; height:300px; border-radius:8px; box-shadow:0 6px 18px rgba(20,30,50,0.06); }
+.map-wrap {
+  
+  display:flex; 
+  justify-content:center; }
+.map {
+  
+  width:100%; 
+  max-width:980px; 
+  height:300px; 
+  border-radius:8px; 
+  box-shadow:0 6px 18px 
+  rgba(20,30,50,0.06); }
 </style>
