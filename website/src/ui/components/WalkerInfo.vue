@@ -71,6 +71,7 @@ function submitSchedule({date, time} = {}) {
   console.log(date)
   scheduledMessage.value = `Booked with ${props.walker.name} on ${date} at ${time}.`
 }
+
 </script>
 
 <style scoped>
@@ -119,7 +120,7 @@ function submitSchedule({date, time} = {}) {
     align-self: flex-start; } 
   .walker-photo { 
     width:260px; 
-    height:350px; 
+    height: auto;
     object-fit:cover; 
     border-radius:8px; 
     box-shadow: 0 8px 24px 
