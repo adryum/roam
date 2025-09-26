@@ -5,7 +5,11 @@ import express from 'express';
 import cors from 'cors';
 import { logIncomingRequests } from './Utils';
 import mysql from 'mysql2'
-import walkerRoute from './routes/WalkerRoute';
+import userRoute from './routes/UserRoute';
+import reservationRoute from './routes/ReservationRoute';
+import reviewRoute from './routes/ReviewRoute';
+import petRoute from './routes/PetRoute';
+import registrationRoute from './routes/RegistrationRoute';
 
 export const app = express()
 app.use(cors())
@@ -20,7 +24,11 @@ export const db = mysql.createPool({
 
 logIncomingRequests(app);
 
-app.use("/walkers", walkerRoute)
+app.use("/registration", registrationRoute)
+app.use("/users", userRoute)
+app.use("/reviews", reviewRoute)
+app.use("/pets", petRoute)
+app.use("/reservations", reservationRoute)
 
 app.listen(5000, () => {
   console.log('Server running on http://localhost:5000');
