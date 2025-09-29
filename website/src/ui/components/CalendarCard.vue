@@ -5,40 +5,56 @@
     <transition name="fade">
       <div v-if="isOpen" class="calendar-card" @keydown.esc="closeCalendar">
         <div class="labels">
-        <label class="label">Date</label>
-        <label class="label">Time</label>
+          <label class="label">Choose a date, time and place:</label>
         </div>
-        <div class="cal-grid">
 
+        <div class="cal-grid">
+          <!-- Date picker -->
           <VDatePicker
             v-model="selectedDate"
             is-inline
-            :first-day-of-week="2"     
+            :first-day-of-week="2"
             :masks="masks"
             :show-weeknumbers="false"
           />
+
+          <!-- Time & location -->
           <div class="time-column">
-            <select v-model="localTime">
-              <option disabled value="">-- pick a time --</option>
+            <select v-model="localStartTime">
+              <option disabled value="">-- start walk when? --</option>
               <option v-for="t in timeSlots" :key="t" :value="t">{{ t }}</option>
             </select>
 
+            <select v-model="localEndTime">
+              <option disabled value="">-- end walk when? --</option>
+              <option v-for="t in timeSlots" :key="t" :value="t">{{ t }}</option>
+            </select>
+
+            <select v-model="localLocation">
+              <option disabled value="">-- where? --</option>
+              <option v-for="loc in locations" :key="loc" :value="loc">{{ loc }}</option>
+            </select>
+
+            <!-- Buttons -->
             <div class="submit-row">
               <button
                 type="button"
-                :disabled="!localDate || !localTime"
+                :disabled="!localDate || !localStartTime || !localEndTime || !localLocation"
                 @click="submitForm"
               >
                 Book walk
               </button>
-
-              <button type="button" class="cancel" @click="closeCalendar">
-                Cancel
-              </button>
+              <button type="button" class="cancel" @click="closeCalendar">Cancel</button>
             </div>
 
-            <div class="preview" v-if="localDate || localTime">
-              <small><strong>Selected:</strong> {{ localDate || '—' }} {{ localTime || '' }}</small>
+            <!-- Preview -->
+            <div class="preview" v-if="localDate || localStartTime || localEndTime || localLocation">
+              <small>
+                <strong>Selected:</strong>
+                {{ localDate || '—' }},
+                {{ localStartTime || '—' }} → {{ localEndTime || '—' }},
+                {{ localLocation || '—' }}
+              </small>
             </div>
           </div>
         </div>
@@ -55,25 +71,36 @@ import 'v-calendar/style.css'
 // Props & emits
 const props = defineProps({
   date: { type: String, default: '' },
-  time: { type: String, default: '' },
+  startTime: { type: String, default: '' },
+  endTime: { type: String, default: '' },
+  location: { type: String, default: '' },
   timeSlots: { type: Array, default: () => ['09:00', '10:00', '11:00', '12:00', '13:00'] },
+  locations: { type: Array, default: () => ['Rīga, Āgenskalns', 'Rīga, Mārupe', 'Rīga, Centrs', 'Rīga, Sarkandaugava', 'Ogre'] },
   open: { type: Boolean, default: undefined }
 })
-const emit = defineEmits(['update:date', 'update:time', 'update:open', 'submit'])
+const emit = defineEmits(['update:date', 'update:startTime', 'update:endTime', 'update:location', 'update:open', 'submit'])
 
-const localTime = ref(props.time || '')
+// Local state
+const localStartTime = ref(props.startTime || '')
+const localEndTime = ref(props.endTime || '')
+const localLocation = ref(props.location || '')
 const selectedDate = ref(props.date ? new Date(props.date) : null)
 const localOpen = ref(props.open ?? false)
 
 const masks = { input: 'YYYY-MM-DD' }
 
-watch(() => props.time, v => { if (v !== localTime.value) localTime.value = v })
-watch(() => props.date, v => {
-  selectedDate.value = v ? new Date(v) : null
-})
-watch(() => props.open, v => {
-  if (v !== undefined) localOpen.value = v
-})
+// Watchers: sync props <-> local state
+watch(() => props.startTime, v => { if (v !== localStartTime.value) localStartTime.value = v })
+watch(() => props.endTime, v => { if (v !== localEndTime.value) localEndTime.value = v })
+watch(() => props.location, v => { if (v !== localLocation.value) localLocation.value = v })
+watch(() => props.date, v => { selectedDate.value = v ? new Date(v) : null })
+watch(() => props.open, v => { if (v !== undefined) localOpen.value = v })
+
+// Emit updates
+watch(localStartTime, v => emit('update:startTime', v))
+watch(localEndTime, v => emit('update:endTime', v))
+watch(localLocation, v => emit('update:location', v))
+watch(localOpen, v => emit('update:open', v))
 
 const formatDate = (d) => {
   if (!d) return ''
@@ -82,14 +109,8 @@ const formatDate = (d) => {
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
-watch(selectedDate, (d) => {
-  const formatted = formatDate(d)
-  emit('update:date', formatted)
-})
+watch(selectedDate, (d) => emit('update:date', formatDate(d)))
 
-watch(localTime, (t) => emit('update:time', t))
-
-watch(localOpen, v => emit('update:open', v))
 const localDate = computed(() => formatDate(selectedDate.value))
 const isOpen = computed({
   get: () => localOpen.value,
@@ -99,18 +120,23 @@ const isOpen = computed({
 // Methods
 function openCalendar() {
   localOpen.value = !localOpen.value
-  // set default date when opening
   if (localOpen.value && !selectedDate.value) selectedDate.value = new Date()
 }
 function closeCalendar() {
   localOpen.value = false
 }
 function submitForm() {
-  if (!localDate.value || !localTime.value) return
-  emit('submit', { date: localDate.value, time: localTime.value })
+  if (!localDate.value || !localStartTime.value || !localEndTime.value || !localLocation.value) return
+  emit('submit', {
+    date: localDate.value,
+    startTime: localStartTime.value,
+    endTime: localEndTime.value,
+    location: localLocation.value
+  })
   localOpen.value = false
 }
 </script>
+
 
 <style scoped>
 .schedule-btn { 
@@ -158,8 +184,6 @@ function submitForm() {
   min-width:150px;
 }
 .labels{
-  align-content: space-between;
-  justify-content: space-between;
   display:flex;
 }
 
@@ -181,7 +205,13 @@ select {
 .submit-row button[disabled] { opacity:0.5; cursor:not-allowed; }
 .submit-row .cancel { background:transparent; border:1px solid #ddd; color:#333; padding:8px 12px; }
 
-.preview { margin-top:8px; color:#666; font-size:0.85rem; }
+.preview { 
+  display:flex;
+  max-width: 150px;
+  margin-top:8px; 
+  color:#666; 
+  font-size:0.85rem; 
+}
 
 .fade-enter-active, .fade-leave-active { transition: opacity .12s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
