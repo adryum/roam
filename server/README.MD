@@ -23,7 +23,7 @@ Servera noklusējuma HTTP ceļš: http://localhost:5000
 
 ### Registration
 #### sign up
-Pieprasījums:
+Pieprasījums: POST
 ```
 uz: /registration/signup
 
@@ -55,7 +55,7 @@ Atbilde:
 ```
 
 #### login
-Pieprasījums:
+Pieprasījums: POST
 ```
 uz: /registration/login
 
@@ -86,7 +86,7 @@ Atbilde:
 
 ### Users
 #### Get all users.
-Pieprasījums:
+Pieprasījums: GET
 ```
 uz: /users/
 ```
@@ -114,7 +114,7 @@ Atbilde:
 
 #### Get all reviews.
 
-Pieprasījums:
+Pieprasījums: GET
 ```
 uz: /reviews/
 ```
@@ -139,7 +139,7 @@ Atbilde:
 ### Pets
 #### Get all pets.
 
-Pieprasījums:
+Pieprasījums: GET
 ```
 uz: /pets/
 ```
@@ -164,7 +164,7 @@ uz: /pets/
 ### Reservations
 #### Get all reservations.
 
-Pieprasījums:
+Pieprasījums: GET
 ```
 uz: /rezervations/
 ```
