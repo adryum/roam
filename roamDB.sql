@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `pets` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table roam.pets: ~1 rows (approximately)
-REPLACE INTO `pets` (`id`, `name`, `image`, `owner_user_id`, `species`, `description`, `age`) VALUES
+INSERT INTO `pets` (`id`, `name`, `image`, `owner_user_id`, `species`, `description`, `age`) VALUES
 	(1, 'Pipariņš', NULL, 1, 'Melns yorks', 'Melns', 99999);
 
 -- Dumping structure for table roam.pet_tags
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `pet_tags` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table roam.pet_tags: ~2 rows (approximately)
-REPLACE INTO `pet_tags` (`id`, `text`, `pet_id`) VALUES
+INSERT INTO `pet_tags` (`id`, `text`, `pet_id`) VALUES
 	(1, 'Mazs', 1),
 	(2, 'Melns', 1);
 
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS `reservations` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table roam.reservations: ~1 rows (approximately)
-REPLACE INTO `reservations` (`id`, `creation_date`, `realization_date`, `walker_user_id`, `client_user_id`, `path_start`, `path_end`, `start_time`, `end_time`, `price`, `description`) VALUES
+INSERT INTO `reservations` (`id`, `creation_date`, `realization_date`, `walker_user_id`, `client_user_id`, `path_start`, `path_end`, `start_time`, `end_time`, `price`, `description`) VALUES
 	(1, '2025-09-23', '2025-09-23', 1, 2, 'te', 'Rīgas miesnineks', 'no', 'tikiem', 20, 'Vedu suņus uz desām!');
 
 -- Dumping structure for table roam.reservation_pets
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `reservation_pets` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table roam.reservation_pets: ~1 rows (approximately)
-REPLACE INTO `reservation_pets` (`id`, `pet_id`, `reservation_id`) VALUES
+INSERT INTO `reservation_pets` (`id`, `pet_id`, `reservation_id`) VALUES
 	(1, 1, 1);
 
 -- Dumping structure for table roam.reviews
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table roam.reviews: ~1 rows (approximately)
-REPLACE INTO `reviews` (`id`, `stars`, `from_user_id`, `to_user_id`, `title`, `content`, `creation_date`) VALUES
+INSERT INTO `reviews` (`id`, `stars`, `from_user_id`, `to_user_id`, `title`, `content`, `creation_date`) VALUES
 	(1, 10, 1, 2, 'Labi nosvinējām', 'Pipariņš uz iesma nekad nav tik labi garšojis!!!', '2025-09-23');
 
 -- Dumping structure for table roam.users
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table roam.users: ~2 rows (approximately)
-REPLACE INTO `users` (`id`, `name`, `surname`, `location`, `description`, `profile_picture`, `role`, `email`, `password`) VALUES
+INSERT INTO `users` (`id`, `name`, `surname`, `location`, `description`, `profile_picture`, `role`, `email`, `password`) VALUES
 	(1, 'Igors', 'Litvjakovs', 'Tavs skapis', 'Mazs ar lielu personalitāti', NULL, 'USER', 'qwerty@', '123'),
 	(2, 'Kudrins', 'Nezinu', 'RVT Toalete', 'Patīk zvanīt', NULL, 'USER', 'a@', '123');
 
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `user_description_points` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table roam.user_description_points: ~2 rows (approximately)
-REPLACE INTO `user_description_points` (`id`, `point`, `user_id`) VALUES
+INSERT INTO `user_description_points` (`id`, `point`, `user_id`) VALUES
 	(1, 'Mīļš', 2),
 	(2, 'Pūkains', 1);
 
