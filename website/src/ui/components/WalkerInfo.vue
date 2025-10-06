@@ -30,9 +30,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import StarRating from './StarRating.vue'
 import CalendarCard from './CalendarCard.vue'
+import { useHome } from '@/core/composables/useWalkerInfo'
+import { mount } from '@vue/test-utils'
 
 // Define props once and get a variable
 const props = defineProps({
@@ -41,6 +43,15 @@ const props = defineProps({
     required: true
   }
 })
+// example how to get variables from store to show reactive values
+// const { isLoggedIn } = useRegistration()
+
+// doesnt work with this uncommented, idk
+// const walker = ref(null)
+// const { walkerInfo } = useHome() 
+// onMounted(() => {
+//   walker.value = walkerInfo()
+// })
 
 // Calendar / scheduling
 const showCalendar = ref(false)
