@@ -1,13 +1,13 @@
 <template>
   <header class="header">
     <div>
-      <a href="">
+      <router-link to="/">
         <img class="logo" src="/assets/logo.png"></img>
-      </a>
+      </router-link>
     </div>
     <div class="right-section">
       <nav class="nav">
-        <a href="#">Home</a>
+        <router-link to="/">Home</router-link>
         <a href="#">Walkers</a>
         <a href="#">About us</a>
       </nav>

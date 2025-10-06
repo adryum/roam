@@ -19,7 +19,7 @@
     </div>
     <div class="footer-center">
       <div class="footer-links">
-        <a href="#">Home</a>
+        <router-link to="/">Home</router-link>
         <a href="#">Walkers</a>
         <a href="#">About us</a>
       </div>
