@@ -6,9 +6,10 @@
     <div class="team-text">
       <h2 class="team-name">{{ name }}</h2>
       <p class="team-experience">{{ experience }}</p>
-      <button class="team-button" @click="$emit('view-profile')">
+      <router-link to= "/walker" class="team-button">
         Profile
-      </button>
+      </router-link>
+      
     </div>
   </div>
 </template>
@@ -33,8 +34,6 @@ defineProps({
   }
 });
 
-// Emit event if you want parent to handle profile navigation
-defineEmits(['view-profile']);
 </script>
 
 <style lang="scss" scoped>
