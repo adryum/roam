@@ -1,6 +1,10 @@
 <template>
   <header class="header">
-    <div class="logo">ROAM</div>
+    <div>
+      <a href="">
+        <img class="logo" src="/assets/logo.png"></img>
+      </a>
+    </div>
     <div class="right-section">
       <nav class="nav">
         <a href="#">Home</a>
@@ -19,7 +23,7 @@
 .header {
   width: 100%;
   background: #b19665;
-  padding: 12px 28px;
+  padding: 20px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27,9 +31,7 @@
 }
 
 .logo {
-  font-weight: 700;
-  font-size: 20px;
-  color: #fff;
+  max-width: 20%;
 }
 
 .right-section {
