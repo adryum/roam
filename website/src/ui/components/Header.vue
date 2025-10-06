@@ -1,12 +1,14 @@
 <template>
   <header class="header">
     <div class="logo">ROAM</div>
-    <nav class="nav">
-      <a href="#">Home</a>
-      <a href="#">Walkers</a>
-      <a href="#">About us</a>
-    </nav>
-    <button class="login-btn">Register/Login</button>
+    <div class="right-section">
+      <nav class="nav">
+        <a href="#">Home</a>
+        <a href="#">Walkers</a>
+        <a href="#">About us</a>
+      </nav>
+      <button class="login-btn">Register/Login</button>
+    </div>
   </header>
 </template>
 
@@ -14,22 +16,59 @@
 </script>
 
 <style scoped>
+.header {
+  width: 100%;
+  background: #b19665;
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box; 
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
 .nav {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
 }
-a {
-    color:white;
-    text-decoration: none;
+
+.nav a {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
-.header { 
-  width:100%;
-  background:#b19665; 
-  color:#fff; 
-  padding:14px 28px; 
-  display:flex; 
-  align-items:center; 
-  justify-content:space-between; 
-  box-sizing:border-box; }
+
+.nav a:hover {
+  text-decoration: underline;
+  font-size: 16px;
+}
+
+.login-btn {
+  background: #d6b993;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.login-btn:hover {
+  background: #c4a678;
+}
 </style>
