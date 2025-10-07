@@ -21,7 +21,7 @@
       <div class="footer-links">
         <router-link to="/">Home</router-link>
         <a href="#">Walkers</a>
-        <a href="#">About us</a>
+        <router-link to="/about">About Us</router-link>
       </div>
       <div class="footer-contact">
         <div>Contact us:</div>

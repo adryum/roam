@@ -3,6 +3,7 @@ import HomeView from '@/ui/views/HomeView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import ProfileView from '@/ui/views/ProfileView.vue'
 import LoginForm from '@/ui/components/LoginForm.vue'
+import AboutUs from '@/ui/views/AboutUs.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,11 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: LoginForm
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: AboutUs 
     }
 
   ],

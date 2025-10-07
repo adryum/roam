@@ -9,7 +9,7 @@
       <nav class="nav">
         <router-link to="/">Home</router-link>
         <a href="#">Walkers</a>
-        <a href="#">About us</a>
+        <router-link to="/about">About Us</router-link>
       </nav>
       <button class="login-btn">Register/Login</button>
     </div>
