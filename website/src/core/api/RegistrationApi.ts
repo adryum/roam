@@ -1,22 +1,21 @@
-// src/core/api/RegistrationApi.ts
-import axios from 'axios'
-import type { AxiosInstance, AxiosResponse } from 'axios'
-
-export interface LoginResponse { success: boolean; user?: any; message?: string }
-export interface SignupResponse { success: boolean; message?: string }
+import axios from "axios"
+import type { RegistrationUserModel } from "./Models";
 
 export class RegistrationApi {
-  private client: AxiosInstance
-
-  constructor(baseUrl = 'http://localhost:5000/auth') { 
-    this.client = axios.create({ baseURL: baseUrl, timeout: 8000 })
-  }
-
-  logIn(email: string, password: string): Promise<AxiosResponse<LoginResponse>> {
-    return this.client.post<LoginResponse>('/login', { email, password })
-  }
-
-  signUp(name: string, email: string, password: string): Promise<AxiosResponse<SignupResponse>> {
-    return this.client.post<SignupResponse>('/signup', { name, email, password })
-  }
+    async logIn(email: string, password: string): Promise<RegistrationUserModel | null> {
+        try {
+            const form = new FormData()
+            form.append('email', email)
+            form.append('password', password)
+            console.log(email, password);
+            
+            const { data } = await axios.post<RegistrationUserModel>('/registration/login', form)
+            console.log(data);
+            
+            return data
+        } catch (error) {
+            console.error(error)
+            return null
+        }
+    }
 }

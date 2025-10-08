@@ -1,58 +1,39 @@
 import { defineStore } from 'pinia'
 import { RegistrationApi } from '../api/RegistrationApi'
+import type { RegistrationUserModel } from '../api/Models'
 
 const registrationApi = new RegistrationApi()
 
 export const useRegistrationStore = defineStore('registration', {
   state: () => ({
+    user: null as RegistrationUserModel | null,
     isLoggedIn: false,
-    currentUser: null as any,
-    loading: false,
-    error: null as string | null,
+    isLoadingLogin: false,
   }),
 
   actions: {
-    async logIn(email: string, password: string) {
-      this.loading = true
-      this.error = null
+    async logIn(email: string, password: string): Promise<void> {
+      this.isLoadingLogin = true
       try {
-        const res = await registrationApi.logIn(email, password)
-        if (res.data.success) {
-          this.isLoggedIn = true
-          this.currentUser = res.data.user
-          console.log('✅ Logged in as', this.currentUser.name)
+        const response = await registrationApi.logIn(email, password)
+        
+        if (!response) {
+            console.log("asdasdasd");
         } else {
-          this.error = res.data.message || 'Invalid credentials'
+            this.user = response
+            this.isLoggedIn = true
         }
+
       } catch (err: any) {
-        this.error = err.response?.data?.message || err.message
-        console.error('Login error:', this.error)
+        console.error('Login error:', err)
       } finally {
-        this.loading = false
+        this.isLoadingLogin = false
       }
     },
-
-    async signUp(username: string, email: string, password: string) {
-      this.loading = true
-      this.error = null
-      try {
-        const res = await registrationApi.signUp(username, email, password)
-        if (res.data.success) {
-          alert('Account created! You can now log in.')
-        } else {
-          this.error = res.data.message || 'Sign-up failed'
-        }
-      } catch (err: any) {
-        this.error = err.response?.data?.message || err.message
-        console.error('Sign-up error:', this.error)
-      } finally {
-        this.loading = false
-      }
-    },
-
+    
     logOut() {
       this.isLoggedIn = false
-      this.currentUser = null
+      this.user = null
     },
   },
 })

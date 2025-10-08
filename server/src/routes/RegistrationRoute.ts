@@ -1,14 +1,15 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "..";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
+import multer from "multer";
 
 const router = Router();
-
+const upload = multer()
 // login user
-router.post('/login', async (req: Request<{},{}, {
+router.post('/login', upload.none(), async (req: Request<{},{}, {
     email: string,
     password: string
-}>, res) => {
+}>, res: Response) => {
     console.log(req.body);
     const { email, password } = req.body
     // missing credentials
@@ -47,7 +48,7 @@ router.post('/login', async (req: Request<{},{}, {
 })
 
 // create user
-router.post('/signup', async (req: Request<{},{}, {
+router.post('/signup', upload.none(), async (req: Request<{},{}, {
     name: string
     surname: string,
     email: string
