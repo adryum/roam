@@ -31,3 +31,20 @@ export type ReviewModel = {
   receivers_fullname: string
 }
 
+
+
+export type RegistrationUserModel = {
+    id: number,
+    name: string,
+    surname: string,
+    email: string,
+    password: string,
+    profile_picture: string,
+    description: string,
+    role: string,
+    description_dots: [
+        {
+            point: string
+        }
+    ]
+}

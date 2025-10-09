@@ -8,12 +8,10 @@
     <div class="right-section">
       <nav class="nav">
         <router-link to="/">Home</router-link>
-        <router-link to="/walker">Walkers</router-link>
-        <router-link to="/aboutus">About Us</router-link>
+        <a href="#">Walkers</a>
+        <router-link to="/about">About Us</router-link>
       </nav>
-      <router-link to="/login" class="login-btn">
-        Register/Login
-      </router-link>
+      <button class="login-btn" @click="$router.push('/registration')">Register/Login</button>
     </div>
   </header>
 </template>

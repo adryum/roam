@@ -1,17 +1,13 @@
 import { storeToRefs } from 'pinia'
-import { useRegistrationStore } from '../stores/registrationStore'
+import { useRegistrationStore } from '../stores/RegistrationStore'
 
 export function useRegistration() {
   const store = useRegistrationStore()
-  const { isLoggedIn, currentUser, loading, error } = storeToRefs(store)
+  const { isLoggedIn } = storeToRefs(store)
 
   return {
     isLoggedIn,
-    currentUser,
-    loading,
-    error,
     logIn: store.logIn,
-    signUp: store.signUp,
-    logOut: store.logOut,
+    // signUp: store.signUp,
   }
 }

@@ -33,6 +33,7 @@ cd website && npm install
 Lai palaistu mājaslapu palaidiet šo komandu WEBSITE FOLDERĪ.
 
 ```sh
+cd website
 npm run dev
 ```
 
