@@ -11,7 +11,7 @@
         <a href="#">Walkers</a>
         <router-link to="/about">About Us</router-link>
       </nav>
-      <button class="login-btn" @click="$router.push('/registration')">Register/Login</button>
+      <button class="login-btn" @click="$router.push('/SignUp')">Register/Login</button>
     </div>
   </header>
 </template>

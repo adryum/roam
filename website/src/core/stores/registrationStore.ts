@@ -9,6 +9,7 @@ export const useRegistrationStore = defineStore('registration', {
     user: null as RegistrationUserModel | null,
     isLoggedIn: false,
     isLoadingLogin: false,
+    isLoadingSignUp: false,
   }),
 
   actions: {
@@ -28,6 +29,25 @@ export const useRegistrationStore = defineStore('registration', {
         console.error('Login error:', err)
       } finally {
         this.isLoadingLogin = false
+      }
+    },
+
+     async signUp(
+      name: string,
+      surname: string,
+      email: string,
+      password: string
+    ): Promise<RegistrationUserModel | null> {
+      this.isLoadingSignUp = true
+      try {
+        const response = await registrationApi.signUp(name, surname, email, password)
+        // do NOT set isLoggedIn here — you’re redirecting to login
+        return response
+      } catch (err) {
+        console.error('Signup error:', err)
+        return null
+      } finally {
+        this.isLoadingSignUp = false
       }
     },
     
