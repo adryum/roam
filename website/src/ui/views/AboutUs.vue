@@ -5,8 +5,8 @@
 
     <!-- ABOUT SECTION -->
     <section class="intro">
+      <h2>Par mums</h2>
       <div class="text">
-
         <p>
           “Roam” ir moderna un lietotājam draudzīga tiešsaistes platforma, kas radīta,
           lai palīdzētu suņu īpašniekiem viegli organizēt sava mīluļa pastaigas.
@@ -18,12 +18,16 @@
         <img src="/assets/dog.jpeg" alt="Dog walking" />
       </div>
     </section>
+    <h2>Mūsu suņu staigātāji</h2>
 
     <!-- WALKERS SECTION -->
     <section class="walkers">
-      <div class="walker" v-for="(walker, index) in walkers" :key="index">
-        <img :src="walker.image" :alt="walker.name" />
-        <p>{{ walker.name }}</p>
+      <div v-if="loading">Loading walkers...</div>
+      <div v-else class="walkers-grid">
+        <div class="walker" v-for="walker in walkers" :key="walker.id">
+          <img :src="walker.profile_picture || '/assets/default-avatar.png'" :alt="walker.name" />
+          <p>{{ walker.name }}</p>
+        </div>
       </div>
     </section>
 
@@ -50,15 +54,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import Header from '@/ui/components/Header.vue'
 import Footer from '@/ui/components/Footer.vue'
-const walkers = [
-  { name: "Ēriks Fūrmanis", image: "/assets/eriks.png" },
-  { name: "Ēriks Fūrmanis", image: "/assets/eriks.png" },
-  { name: "Ēriks Fūrmanis", image: "/assets/eriks.png" },
-];
+import axios from 'axios'
+import type { UserModel, ReviewModel } from '@/core/api/Models'
+
+const walkers = ref<UserModel[]>([])
+const loading = ref(true)
+
+async function fetchWalkers() {
+  try {
+    const response = await axios.get<UserModel[]>('http://localhost:5000/users/')
+    walkers.value = response.data.filter(u => u.role?.toLowerCase() === 'walker')
+  } catch (error) {
+    console.error('Failed to fetch walkers:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchWalkers)
 </script>
+
 
 <style scoped>
 * {
@@ -67,9 +86,10 @@ const walkers = [
   box-sizing: border-box;
   font-family: "Arial", sans-serif;
 }
-
+h2{
+  text-align: center;
+}
 .about-page {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f9f6f2;
   color: #222;
 }
@@ -125,26 +145,38 @@ const walkers = [
 }
 
 /* WALKERS */
-.walkers {
-  display: flex;
-  justify-content: center;
+.walkers-grid {
+  padding: 50px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 30px;
   margin: 40px 0;
-  flex-wrap: wrap;
 }
 
 .walker {
   text-align: center;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background-color: #fff;
+  transition: transform 0.2s ease;
+}
+
+.walker:hover {
+  transform: translateY(-5px);
 }
 
 .walker img {
-  width: 230px;
+  width: 100%;
   height: 230px;
   object-fit: cover;
-  border-radius: 10px;
-  margin-bottom: 10px;
 }
 
+.walker p {
+  margin-top: 10px;
+  font-weight: 600;
+  color: #333;
+}
 /* STEPS */
 .steps {
   max-width: 900px;

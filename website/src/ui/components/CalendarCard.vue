@@ -27,8 +27,9 @@
 
             <select v-model="localEndTime">
               <option disabled value="">-- end walk when? --</option>
-              <option v-for="t in timeSlots" :key="t" :value="t">{{ t }}</option>
+              <option v-for="t in filteredEndTimes" :key="t" :value="t">{{ t }}</option>
             </select>
+
 
             <select v-model="localLocation">
               <option disabled value="">-- where? --</option>
@@ -67,6 +68,15 @@
 import { ref, watch, computed } from 'vue'
 import { DatePicker as VDatePicker } from 'v-calendar'
 import 'v-calendar/style.css'
+import { useRegistrationStore } from '@/core/stores/registrationStore';
+import { useWalksStore } from '@/core/stores/WalkStore.ts';
+
+const filteredEndTimes = computed(() => {
+  if (!localStartTime.value) return props.timeSlots;
+  const startIndex = props.timeSlots.indexOf(localStartTime.value);
+  return startIndex >= 0 ? props.timeSlots.slice(startIndex + 1) : props.timeSlots;
+});
+
 
 // Props & emits
 const props = defineProps({
@@ -78,6 +88,9 @@ const props = defineProps({
   locations: { type: Array, default: () => ['Rīga, Āgenskalns', 'Rīga, Mārupe', 'Rīga, Centrs', 'Rīga, Sarkandaugava', 'Ogre'] },
   open: { type: Boolean, default: undefined }
 })
+const regStore = useRegistrationStore();
+const walksStore = useWalksStore();
+
 const emit = defineEmits(['update:date', 'update:startTime', 'update:endTime', 'update:location', 'update:open', 'submit'])
 
 // Local state
@@ -101,6 +114,12 @@ watch(localStartTime, v => emit('update:startTime', v))
 watch(localEndTime, v => emit('update:endTime', v))
 watch(localLocation, v => emit('update:location', v))
 watch(localOpen, v => emit('update:open', v))
+watch(localStartTime, (newStart) => {
+  if (localEndTime.value && props.timeSlots.indexOf(localEndTime.value) <= props.timeSlots.indexOf(newStart)) {
+    localEndTime.value = '';
+  }
+});
+
 
 const formatDate = (d) => {
   if (!d) return ''
@@ -125,15 +144,27 @@ function openCalendar() {
 function closeCalendar() {
   localOpen.value = false
 }
-function submitForm() {
-  if (!localDate.value || !localStartTime.value || !localEndTime.value || !localLocation.value) return
-  emit('submit', {
+async function submitForm() {
+  if (!regStore.isLoggedIn) {
+    alert('You must be logged in to schedule a walk');
+    return;
+  }
+
+  if (!localDate.value || !localStartTime.value || !localEndTime.value || !localLocation.value) return;
+
+  const saved = await walksStore.scheduleWalk({
     date: localDate.value,
     startTime: localStartTime.value,
     endTime: localEndTime.value,
     location: localLocation.value
-  })
-  localOpen.value = false
+  });
+
+  if (saved) {
+    alert('Walk successfully scheduled!');
+    closeCalendar();
+  } else {
+    alert('Failed to schedule walk.');
+  }
 }
 </script>
 

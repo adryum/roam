@@ -17,22 +17,25 @@ export const useRegistrationStore = defineStore('registration', {
       this.isLoadingLogin = true
       try {
         const response = await registrationApi.logIn(email, password)
-        
-        if (!response) {
-            console.log("asdasdasd");
-        } else {
-            this.user = response
-            this.isLoggedIn = true
-        }
+        if (response) {
+          this.user = response
+          this.isLoggedIn = true
 
+          localStorage.setItem('user', JSON.stringify(response))
+          localStorage.setItem('isLoggedIn', 'true')
+        } else {
+          this.isLoggedIn = false
+          this.user = null
+        }
       } catch (err: any) {
         console.error('Login error:', err)
+        this.isLoggedIn = false
       } finally {
         this.isLoadingLogin = false
       }
     },
 
-     async signUp(
+    async signUp(
       name: string,
       surname: string,
       email: string,
@@ -41,7 +44,6 @@ export const useRegistrationStore = defineStore('registration', {
       this.isLoadingSignUp = true
       try {
         const response = await registrationApi.signUp(name, surname, email, password)
-        // do NOT set isLoggedIn here — you’re redirecting to login
         return response
       } catch (err) {
         console.error('Signup error:', err)
@@ -51,9 +53,27 @@ export const useRegistrationStore = defineStore('registration', {
       }
     },
     
+
     logOut() {
       this.isLoggedIn = false
       this.user = null
+      localStorage.removeItem('user')
+      localStorage.removeItem('isLoggedIn')
+    },
+
+    restoreSession() {
+      const savedUser = localStorage.getItem('user')
+      const savedLogin = localStorage.getItem('isLoggedIn') === 'true'
+      if (savedUser && savedLogin) {
+        try {
+          this.user = JSON.parse(savedUser)
+          this.isLoggedIn = true
+        } catch (e) {
+          console.warn('Failed to parse saved user:', e)
+          this.user = null
+          this.isLoggedIn = false
+        }
+      }
     },
   },
 })

@@ -2,6 +2,7 @@ import axios from "axios"
 import type { RegistrationUserModel } from "./Models";
 
 export class RegistrationApi {
+    
     async logIn(email: string, password: string): Promise<RegistrationUserModel | null> {
         try {
             const form = new FormData()
@@ -34,4 +35,6 @@ export class RegistrationApi {
             return null
         }
     }
+    
+    
 }
