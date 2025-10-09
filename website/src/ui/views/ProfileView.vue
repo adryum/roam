@@ -1,98 +1,184 @@
+<script setup lang="ts">
+import { ref, reactive, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRegistrationStore } from '@/core/stores/registrationStore'
+import router from '@/core/router'
+
+import Header from '@/ui/components/Header.vue'
+import Footer from '@/ui/components/Footer.vue'
+import CalendarCard from '../components/CalendarCard.vue'
+import Map from '../components/Map.vue'
+
+import { useWalksStore } from '@/core/stores/WalkStore.ts';
+const walksStore = useWalksStore();
+onMounted(() => {
+  if (regStore.isLoggedIn) walksStore.fetchWalks();
+});
+
+
+const regStore = useRegistrationStore()
+const { user, isLoggedIn } = storeToRefs(regStore)
+
+
+const fullName = computed(() =>
+  user.value ? `${user.value.name} ${user.value.surname}` : '—'
+)
+const profilePic = computed(() =>
+  user.value?.profile_picture && user.value.profile_picture.trim() !== ''
+    ? user.value.profile_picture
+    : '/assets/default-avatar.png'
+)
+const role = computed(() => user.value?.role || '—')
+const email = computed(() => user.value?.email || '—')
+const description = computed(() => user.value?.description || 'Nav apraksta')
+const descriptionDots = computed(() => user.value?.description_dots ?? [])
+
+const editingName = ref(false)
+const nameDraft = ref('')
+const surnameDraft = ref('')
+
+function startEditing() {
+  if (!user.value) return
+  nameDraft.value = user.value.name
+  surnameDraft.value = user.value.surname
+  editingName.value = true
+}
+
+function cancelEditing() {
+  editingName.value = false
+}
+
+async function saveName() {
+  if (!user.value) return
+  user.value.name = nameDraft.value.trim()
+  user.value.surname = surnameDraft.value.trim()
+  editingName.value = false
+
+
+  localStorage.setItem('user', JSON.stringify(user.value))
+}
+
+
+function logout() {
+  regStore.logOut()
+  router.push('/registration')
+}
+
+
+const date = ref('')
+const startTime = ref('')
+const endTime = ref('')
+const location = ref('')
+const calendarOpen = ref(true)
+onMounted(() => (calendarOpen.value = true))
+const timeSlots = ['09:00','10:00','11:00','12:00','13:00','14:00']
+const locations = ['Rīga, Āgenskalns','Rīga, Mārupe','Rīga, Centrs','Rīga, Sarkandaugava','Ogre']
+function handleBooking(payload: { date: string; startTime: string; endTime: string; location: string }) {
+  alert(`Booked: ${payload.date} | ${payload.startTime} → ${payload.endTime} @ ${payload.location}`)
+}
+
+
+const dog = reactive({ id: 1, name: 'Pipariņš', species: 'Melns yorks', age: 3, description: 'Ļoti draudzīgs un enerģisks.' })
+const dogDraft = reactive({ ...dog })
+const dogModalOpen = ref(false)
+const saving = ref(false)
+function openDogModal() { Object.assign(dogDraft, dog); dogModalOpen.value = true }
+function closeDogModal() { dogModalOpen.value = false }
+async function saveDog() {
+  saving.value = true
+  try { Object.assign(dog, dogDraft); closeDogModal() }
+  catch (e) { console.error('Failed to save dog:', e); alert('Failed to save changes.') }
+  finally { saving.value = false }
+}
+</script>
+
+
 <template>
   <div class="profile-view">
-    <!-- Header -->
     <Header />
 
-    <!-- Profile Section -->
     <main class="main">
       <div class="content">
-        <!-- Left column -->
+        <!-- Left -->
         <div class="left">
           <div class="profile-header">
-            <h1>Ēriks Furmanis</h1>
-            <button class="edit-btn">
-              <i class="fas fa-pen"></i>
-            </button>
+            <div class="header-top">
+              <h1 v-if="!editingName">{{ fullName }}</h1>
+              <div v-else class="edit-name">
+                <input v-model="nameDraft" placeholder="Name" />
+                <input v-model="surnameDraft" placeholder="Surname" />
+                <button class="btn small primary" @click="saveName">Save</button>
+                <button class="btn small secondary" @click="cancelEditing">Cancel</button>
+              </div>
+              <button class="edit-btn" title="Edit name" @click="startEditing">
+                <i class="fas fa-pen"></i>
+              </button>
+            </div>
+            <span class="badge">{{ role }}</span>
           </div>
 
           <ul class="info">
-            <li>• Information about myself</li>
+            <li><strong>E-pasts:</strong> {{ email }}</li>
+            <li><strong>Apraksts:</strong> {{ description }}</li>
+            <li v-for="(dot, i) in descriptionDots" :key="i">• {{ dot.point }}</li>
           </ul>
 
-          <!-- Dog info button -->
           <button class="dog-btn" @click="openDogModal">
-            <i class="fas fa-dog"></i>
-            View Information About Your Dog
+            <i class="fas fa-dog"></i> View Information About Your Dog
           </button>
 
-          <!-- Calendar -->
-          <div class="calendar-section">
-            <h2>Book a walk</h2>
-            <CalendarCard
-              v-model:date="date"
-              v-model:startTime="startTime"
-              v-model:endTime="endTime"
-              v-model:location="location"
-              :timeSlots="timeSlots"
-              :locations="locations"
-              v-model:open="calendarOpen"
-              @submit="handleBooking"
-            />
+          <button class="logout-btn" @click="logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+
+          <div class="reservations">
+            <h2>Your Scheduled Walks</h2>
+            <ul>
+              <li v-for="walk in walksStore.walks" :key="walk.id">
+                {{ walk.date }} | {{ walk.startTime }} → {{ walk.endTime }} | {{ walk.location }}
+              </li>
+              <li v-if="walksStore.walks.length === 0">No walks scheduled yet.</li>
+            </ul>
           </div>
+
         </div>
 
-        <!-- Right column -->
+        <!-- Right -->
         <div class="right">
-          <img
-            src="https://upload.wikimedia.org/wikipedia/en/0/03/Walter_White_S5B.png"
-            alt="Profile"
-            class="profile-img"
-          />
-
-          <!-- Replaced static image with Map.vue -->
+          <img :src="profilePic" alt="Profile picture" class="profile-img" />
           <Map />
         </div>
       </div>
     </main>
 
-    <!-- Footer -->
     <Footer />
 
-    <!-- Dog Info Modal -->
-    <teleport to="body">
-      <div
-        v-if="dogModalOpen"
-        class="modal-backdrop"
-        @click.self="closeDogModal"
-      >
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dogModalTitle">
-          <div class="modal-header">
-            <h3 id="dogModalTitle">Dog Information</h3>
-            <button class="icon-btn" aria-label="Close" @click="closeDogModal">✕</button>
-          </div>
 
+    <teleport to="body">
+      <div v-if="dogModalOpen" class="modal-backdrop" @click.self="closeDogModal">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>Dog Information</h3>
+            <button class="icon-btn" @click="closeDogModal">✕</button>
+          </div>
           <div class="modal-body">
             <div class="form-row">
-              <label for="dogName">Name</label>
-              <input id="dogName" v-model="dogDraft.name" placeholder="e.g. Pipariņš" />
+              <label>Name</label>
+              <input v-model="dogDraft.name" />
             </div>
-
             <div class="form-row">
-              <label for="dogBreed">Breed</label>
-              <input id="dogBreed" v-model="dogDraft.species" placeholder="e.g. Melns yorks" />
+              <label>Breed</label>
+              <input v-model="dogDraft.species" />
             </div>
-
             <div class="form-row">
-              <label for="dogAge">Age</label>
-              <input id="dogAge" type="number" min="0" v-model.number="dogDraft.age" placeholder="e.g. 3" />
+              <label>Age</label>
+              <input type="number" v-model.number="dogDraft.age" />
             </div>
-
             <div class="form-row">
-              <label for="dogDesc">Description</label>
-              <textarea id="dogDesc" v-model="dogDraft.description" rows="3" placeholder="Short description..." />
+              <label>Description</label>
+              <textarea v-model="dogDraft.description" rows="3" />
             </div>
           </div>
-
           <div class="modal-footer">
             <button class="btn secondary" @click="closeDogModal">Cancel</button>
             <button class="btn primary" :disabled="saving" @click="saveDog">
@@ -105,64 +191,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import Header from '@/ui/components/Header.vue'
-import Footer from '@/ui/components/Footer.vue'
-import CalendarCard from '../components/CalendarCard.vue'
-import Map from '../components/Map.vue' // ✅ new map import
-
-// ===== Calendar state =====
-const date = ref('')
-const startTime = ref('')
-const endTime = ref('')
-const location = ref('')
-
-const calendarOpen = ref(true)
-onMounted(() => (calendarOpen.value = true))
-
-const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00']
-const locations = ['Rīga, Āgenskalns', 'Rīga, Mārupe', 'Rīga, Centrs', 'Rīga, Sarkandaugava', 'Ogre']
-
-function handleBooking(payload: { date: string; startTime: string; endTime: string; location: string }) {
-  console.log('Booking submitted:', payload)
-  alert(`Booked: ${payload.date} | ${payload.startTime} → ${payload.endTime} @ ${payload.location}`)
-}
-
-// ===== Dog modal state =====
-const dog = reactive({
-  id: 1,
-  name: 'Pipariņš',
-  species: 'Melns yorks',
-  age: 3,
-  description: 'Ļoti draudzīgs un enerģisks.'
-})
-const dogDraft = reactive({ ...dog })
-const dogModalOpen = ref(false)
-const saving = ref(false)
-
-function openDogModal() {
-  Object.assign(dogDraft, dog)
-  dogModalOpen.value = true
-}
-
-function closeDogModal() {
-  dogModalOpen.value = false
-}
-
-async function saveDog() {
-  saving.value = true
-  try {
-    Object.assign(dog, dogDraft)
-    closeDogModal()
-  } catch (e) {
-    console.error('Failed to save dog:', e)
-    alert('Failed to save changes.')
-  } finally {
-    saving.value = false
-  }
-}
-</script>
 
 <style lang="scss">
 .profile-view {
@@ -195,6 +223,9 @@ async function saveDog() {
           }
 
           .edit-btn {
+            justify-content: center;
+            width: auto;
+            height: 30px;
             background: #e6d5c0;
             padding: 0.5rem;
             border-radius: 6px;
@@ -259,8 +290,50 @@ async function saveDog() {
     }
   }
 }
+.logout-btn {
+  margin-top: 1rem;
+  background: #b54d4d;
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
 
-/* Modal styles remain same as before */
+  &:hover {
+    background: #992f2f;
+  }
+}
+
+.edit-name {
+  display: flex;
+  gap: 0.5rem;
+
+  input {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+}
+
+.btn.small {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.profile-img {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  background: #e5e5e5;
+}
+
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -269,6 +342,10 @@ async function saveDog() {
   place-items: center;
   z-index: 1000;
 }
+.header-top{
+    display: flex;
+    flex-direction: row;
+  }
 
 .modal {
   width: min(520px, 96vw);
@@ -305,6 +382,7 @@ async function saveDog() {
       }
     }
   }
+  
 
   .modal-body {
     display: flex;

@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.20"
   }
 }

@@ -20,7 +20,7 @@
     <div class="footer-center">
       <div class="footer-links">
         <router-link to="/">Home</router-link>
-        <a href="#">Walkers</a>
+        <a href="/walker">Walkers</a>
         <router-link to="/about">About Us</router-link>
       </div>
       <div class="footer-contact">
@@ -38,6 +38,7 @@
 
 <style scoped>
 .footer {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   width: 100%;
   background: #b19665;
   color: white;

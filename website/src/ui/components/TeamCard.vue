@@ -6,16 +6,20 @@
     <div class="team-text">
       <h2 class="team-name">{{ name }}</h2>
       <p class="team-experience">{{ experience }}</p>
-      <router-link to= "/walker" class="team-button">
+      <router-link :to="`/walker/${id}`" class="team-button">
         Profile
       </router-link>
-      
+
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
+  id: {
+    type: [String, Number],
+    required: true
+  },
   name: {
     type: String,
     required: true
@@ -32,8 +36,7 @@ defineProps({
     type: Boolean,
     default: false
   }
-});
-
+})
 </script>
 
 <style lang="scss" scoped>
@@ -57,17 +60,18 @@ defineProps({
 
   .team-image-container {
     width: 100%;
-
     @media (min-width: 768px) {
       width: 50%;
     }
   }
 
+  /* Force all images to the same height */
   .team-image {
     width: 100%;
-    height: auto;
+    height: 350px; /* fixed height */
+    object-fit: cover;
     border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
     border: 1px solid #f3f4f6;
     display: block;
   }
