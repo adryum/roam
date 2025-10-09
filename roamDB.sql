@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
 -- Host:                         127.0.0.1
--- Server version:               8.0.43 - MySQL Community Server - GPL
+-- Server version:               8.3.0 - MySQL Community Server - GPL
 -- Server OS:                    Win64
--- HeidiSQL Version:             12.11.0.7065
+-- HeidiSQL Version:             12.6.0.6765
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `pets` (
   CONSTRAINT `FK_pets_users` FOREIGN KEY (`owner_user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table roam.pets: ~1 rows (approximately)
+-- Dumping data for table roam.pets: ~0 rows (approximately)
 INSERT INTO `pets` (`id`, `name`, `image`, `owner_user_id`, `species`, `description`, `age`) VALUES
 	(1, 'Pipariņš', NULL, 1, 'Melns yorks', 'Melns', 99999);
 
@@ -55,16 +55,15 @@ INSERT INTO `pet_tags` (`id`, `text`, `pet_id`) VALUES
 -- Dumping structure for table roam.reservations
 CREATE TABLE IF NOT EXISTS `reservations` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `creation_date` date DEFAULT NULL,
-  `realization_date` date DEFAULT NULL,
   `walker_user_id` bigint DEFAULT NULL,
   `client_user_id` bigint DEFAULT NULL,
   `path_start` varchar(50) DEFAULT NULL,
   `path_end` varchar(50) DEFAULT NULL,
-  `start_time` varchar(50) DEFAULT NULL,
-  `end_time` varchar(50) DEFAULT NULL,
   `price` float DEFAULT NULL,
   `description` varchar(500) DEFAULT NULL,
+  `creation_date_time` datetime DEFAULT NULL,
+  `walk_start_date_time` datetime DEFAULT NULL,
+  `walk_end_date_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_reservations_users` (`walker_user_id`),
   KEY `FK_reservations_users_2` (`client_user_id`),
@@ -72,9 +71,9 @@ CREATE TABLE IF NOT EXISTS `reservations` (
   CONSTRAINT `FK_reservations_users_2` FOREIGN KEY (`client_user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table roam.reservations: ~1 rows (approximately)
-INSERT INTO `reservations` (`id`, `creation_date`, `realization_date`, `walker_user_id`, `client_user_id`, `path_start`, `path_end`, `start_time`, `end_time`, `price`, `description`) VALUES
-	(1, '2025-09-23', '2025-09-23', 1, 2, 'te', 'Rīgas miesnineks', 'no', 'tikiem', 20, 'Vedu suņus uz desām!');
+-- Dumping data for table roam.reservations: ~0 rows (approximately)
+INSERT INTO `reservations` (`id`, `walker_user_id`, `client_user_id`, `path_start`, `path_end`, `price`, `description`, `creation_date_time`, `walk_start_date_time`, `walk_end_date_time`) VALUES
+	(1, 1, 2, 'te', 'Rīgas miesnineks', 20, 'Vedu suņus uz desām!', '2025-09-23 00:00:00', NULL, NULL);
 
 -- Dumping structure for table roam.reservation_pets
 CREATE TABLE IF NOT EXISTS `reservation_pets` (
@@ -88,7 +87,7 @@ CREATE TABLE IF NOT EXISTS `reservation_pets` (
   CONSTRAINT `FK_reservation_pets_reservations` FOREIGN KEY (`reservation_id`) REFERENCES `reservations` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table roam.reservation_pets: ~1 rows (approximately)
+-- Dumping data for table roam.reservation_pets: ~0 rows (approximately)
 INSERT INTO `reservation_pets` (`id`, `pet_id`, `reservation_id`) VALUES
 	(1, 1, 1);
 
@@ -100,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   `to_user_id` bigint NOT NULL,
   `title` varchar(50) DEFAULT NULL,
   `content` varchar(500) DEFAULT NULL,
-  `creation_date` date DEFAULT NULL,
+  `creation_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_reviews_users` (`from_user_id`),
   KEY `FK_reviews_users_2` (`to_user_id`),
@@ -108,9 +107,9 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   CONSTRAINT `FK_reviews_users_2` FOREIGN KEY (`to_user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table roam.reviews: ~1 rows (approximately)
+-- Dumping data for table roam.reviews: ~0 rows (approximately)
 INSERT INTO `reviews` (`id`, `stars`, `from_user_id`, `to_user_id`, `title`, `content`, `creation_date`) VALUES
-	(1, 10, 1, 2, 'Labi nosvinējām', 'Pipariņš uz iesma nekad nav tik labi garšojis!!!', '2025-09-23');
+	(1, 10, 1, 2, 'Labi nosvinējām', 'Pipariņš uz iesma nekad nav tik labi garšojis!!!', '2025-09-23 00:00:00');
 
 -- Dumping structure for table roam.users
 CREATE TABLE IF NOT EXISTS `users` (

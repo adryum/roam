@@ -1,10 +1,10 @@
 import { Router, type Request, type Response } from "express";
-import { db } from "..";
+import { db } from "../config/Database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
-import multer from "multer";
+import { upload } from "../config/Multer";
 
 const router = Router();
-const upload = multer()
+
 // login user
 router.post('/login', upload.none(), async (req: Request<{},{}, {
     email: string,
