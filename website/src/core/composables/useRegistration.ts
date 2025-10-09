@@ -1,5 +1,5 @@
 import { storeToRefs } from 'pinia'
-import { useRegistrationStore } from '../stores/RegistrationStore'
+import { useRegistrationStore } from '../stores/registrationStore'
 
 export function useRegistration() {
   const store = useRegistrationStore()
@@ -8,6 +8,6 @@ export function useRegistration() {
   return {
     isLoggedIn,
     logIn: store.logIn,
-    // signUp: store.signUp,
+    signUp: store.signUp,
   }
 }
