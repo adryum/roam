@@ -28,7 +28,7 @@
     </div>
 
     <div class="walker-photo-wrap">
-      <img class="walker-photo" :src="walker.profile_picture || ''" :alt="walker.name" />
+      <img class="walker-photo" :src="walker.profile_picture || '/assets/default-avatar.png'"/>
     </div>
   </div>
 </template>

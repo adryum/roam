@@ -69,6 +69,7 @@ const walkers = [
 }
 
 .about-page {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f9f6f2;
   color: #222;
 }

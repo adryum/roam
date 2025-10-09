@@ -1,6 +1,56 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import TeamCard from '../components/TeamCard.vue'
+import Header from '@/ui/components/Header.vue'
+import Footer from '@/ui/components/Footer.vue'
+import type { UserModel, ReviewModel } from '@/core/api/Models'
+
+const topWalkers = ref<UserModel[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+
+async function fetchTopWalkers() {
+  loading.value = true
+  try {
+    const usersResponse = await axios.get<UserModel[]>('http://localhost:5000/users/')
+    const reviewsResponse = await axios.get<ReviewModel[]>('http://localhost:5000/reviews/')
+
+    const walkers = usersResponse.data.filter(u => u.role?.toLowerCase() === 'walker')
+
+    const reviewsByWalker: Record<number, ReviewModel[]> = {}
+    reviewsResponse.data.forEach(r => {
+      if (!reviewsByWalker[r.receiver_id]) reviewsByWalker[r.receiver_id] = []
+      reviewsByWalker[r.receiver_id].push(r)
+    })
+
+    const walkersWithAvgStars = walkers.map(w => {
+      const walkerReviews = reviewsByWalker[w.id] || []
+      const avgStars =
+        walkerReviews.length > 0
+          ? walkerReviews.reduce((sum, r) => sum + r.stars, 0) / walkerReviews.length
+          : 0
+      return { ...w, avgStars }
+    })
+
+    topWalkers.value = walkersWithAvgStars
+      .sort((a, b) => b.avgStars - a.avgStars)
+      .slice(0, 2)
+  } catch (err: any) {
+    console.error(err)
+    error.value = 'Failed to load walkers.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchTopWalkers)
+</script>
+
 <template>
   <div class="home-view">
     <Header />
+
     <section class="hero-section">
       <img src="/assets/background.png" alt="Dog walking in autumn" class="hero-image" />
       <div class="hero-overlay">
@@ -11,34 +61,34 @@
     </section>
 
     <section class="team-section" id="team-section">
-      <div class="team-grid">
+      <h1 class="top-walkers">Top Walkers</h1>
+      <div v-if="loading">Loading top walkers...</div>
+      <div v-else-if="error">{{ error }}</div>
+      <div v-else class="team-grid">
         <TeamCard
-          name="Ēriks Fūrmanis"
-          experience="Speciālists ar 5 gadu pieredzi"
-          image="/assets/eriks.png"
-          :reverse="false"
+          v-for="(walker, index) in topWalkers"
+          :key="walker.id"
+          :id="walker.id"
+          :name="walker.name + ' ' + (walker.surname || '')"
+          :experience="walker.description || 'Professional Dog walker'"
+          :image="walker.profile_picture || '/assets/default-avatar.png'"
+          :reverse="index % 2 === 1"
         />
-        <TeamCard
-          name="Ēriks Fūrmanis"
-          experience="Speciālists ar 15 gadu pieredzi"
-          image="/assets/heisenberg.png"
-          :reverse="true"
-        />
+
       </div>
     </section>
+
     <Footer />
   </div>
 </template>
 
-<script setup>
-import TeamCard from '../components/TeamCard.vue';
-import Header from '@/ui/components/Header.vue';
-import Footer from '@/ui/components/Footer.vue';
-</script>
 
 <style lang="scss" scoped>
 .home-view {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.top-walkers{
+  text-align: center;
 }
 
 .hero-section {

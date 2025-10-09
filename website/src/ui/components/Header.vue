@@ -8,7 +8,7 @@
     <div class="right-section">
       <nav class="nav">
         <router-link to="/">Home</router-link>
-        <a href="#">Walkers</a>
+        <router-link to="/walker">Walkers</router-link>
         <router-link to="/about">About Us</router-link>
       </nav>
       <button class="login-btn" @click="$router.push('/registration')">Register/Login</button>
@@ -21,6 +21,7 @@
 
 <style scoped>
 .header {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   width: 100%;
   background: #b19665;
   padding: 20px 28px;

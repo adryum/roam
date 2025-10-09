@@ -33,7 +33,13 @@ const router = createRouter({
       path: '/about',
       name: 'about',
       component: AboutUs 
-    }
+    },
+    {
+      path: '/walker/:id',
+      name: 'walker',
+      component: WalkerView,
+      props: true
+    },
 
   ],
 })

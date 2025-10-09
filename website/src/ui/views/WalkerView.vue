@@ -1,13 +1,98 @@
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import axios from 'axios'
+import type { UserModel, ReviewModel } from '@/core/api/Models'
+
+import Header from '@/ui/components/Header.vue'
+import Footer from '@/ui/components/Footer.vue'
+import WalkerInfo from '@/ui/components/WalkerInfo.vue'
+import ReviewsList from '@/ui/components/ReviewsList.vue'
+import Map from '@/ui/components/Map.vue'
+import TeamCard from '@/ui/components/TeamCard.vue'
+
+// Reactive state
+const route = useRoute()
+const walkerId = ref<number | null>(route.params.id ? Number(route.params.id) : null)
+
+const walkers = ref<UserModel[]>([])
+const walker = ref<UserModel | null>(null)
+const reviews = ref<ReviewModel[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+
+async function fetchWalkers() {
+  loading.value = true
+  try {
+    const response = await axios.get<UserModel[]>('http://localhost:5000/users/')
+    walkers.value = response.data.filter(u => u.role?.toLowerCase() === 'walker')
+
+    if (walkerId.value !== null) {
+      // Specific walker mode
+      walker.value = walkers.value.find(w => w.id === walkerId.value) || null
+      if (walker.value) await fetchReviews()
+      else error.value = 'Walker not found.'
+    }
+    // else: do nothing, all walkers view will render
+  } catch (err: any) {
+    console.error(err)
+    error.value = 'Failed to load walker data.'
+  } finally {
+    loading.value = false
+  }
+}
+
+
+async function fetchReviews() {
+  try {
+    const { data } = await axios.get('http://localhost:5000/reviews/')
+    const allReviews: ReviewModel[] =
+      Array.isArray(data) && data.length > 0 && Array.isArray(data[0].reviews_json)
+        ? data[0].reviews_json
+        : []
+
+    if (walker.value) {
+      reviews.value = allReviews.filter(r => r.receiver_id === walker.value!.id)
+    } else {
+      reviews.value = []
+    }
+  } catch (err) {
+    console.error(err)
+    reviews.value = []
+  }
+}
+watch(
+  () => route.params.id,
+  (newId) => {
+    walkerId.value = newId ? Number(newId) : null
+
+    // Reset state if switching to "all walkers"
+    if (walkerId.value === null) {
+      walker.value = null
+      reviews.value = []
+      error.value = null
+    }
+
+    fetchWalkers()
+  }
+)
+
+
+onMounted(fetchWalkers)
+</script>
+
 <template>
   <div class="walker-page">
     <Header />
 
-    <div class="content-container">
-      <main class="content">
+    <main class="content-container">
+      <div class="content">
         <div v-if="loading">Loading walker data...</div>
         <div v-else-if="error">{{ error }}</div>
+
         <div v-else-if="walker">
           <WalkerInfo :walker="walker" :reviews="reviews" />
+
           <section class="reviews-section">
             <div class="reviews-header">
               <h2>Reviews</h2>
@@ -25,100 +110,39 @@
             </div>
           </section>
         </div>
-        <div v-else>No walker found.</div>
-      </main>
-    </div>
+
+        <!-- All walkers view -->
+        <div v-else>
+          <h1>All Walkers</h1>
+          <div class="walkers-grid">
+            <TeamCard
+              v-for="(w, index) in walkers"
+              :key="w.id"
+              :id="w.id"
+              :name="w.name + ' ' + (w.surname || '')"
+              :experience="w.description || 'Professional Dog walker'"
+              :image="w.profile_picture || '/assets/default-avatar.png'"
+              :reverse="index % 2 === 1"
+            />
+          </div>
+        </div>
+      </div>
+    </main>
 
     <Footer />
   </div>
 </template>
 
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
-import type { UserModel, ReviewModel } from '@/core/api/Models'
-import Header from '@/ui/components/Header.vue'
-import Footer from '@/ui/components/Footer.vue'
-import WalkerInfo from '@/ui/components/WalkerInfo.vue'
-import ReviewsList from '@/ui/components/ReviewsList.vue'
-import Map from '@/ui/components/Map.vue'
-
-
-// Walker data
-const walker = ref<UserModel | null>(null)
-// Reviews data
-const reviews = ref<ReviewModel[]>([])
-// Loading/error state
-const loading = ref(true)
-const error = ref<string | null>(null)
-
-async function fetchWalker() {
-  loading.value = true
-  try {
-    const response = await axios.get('http://localhost:5000/users/')
-    console.log('Walker API response:', response.data)
-
-    // response.data is already an array of users
-    const users: UserModel[] = response.data
-    walker.value = users.find(u => u.role?.toLowerCase() === 'walker') || null
-
-    if (walker.value) {
-      await fetchReviews()
-    } else {
-      error.value = 'No walker found.'
-    }
-  } catch (err: any) {
-    console.error('Error fetching walker:', err.response?.data || err.message)
-    walker.value = null
-    reviews.value = []
-    error.value = 'Failed to load walker data.'
-  } finally {
-    loading.value = false
-  }
-}
-
-
-async function fetchReviews() {
-  try {
-    const { data } = await axios.get('http://localhost:5000/reviews/')
-    console.log('Reviews API response:', data)
-
-    // Extract the reviews array from the API structure
-    const allReviews: ReviewModel[] =
-      Array.isArray(data) && data.length > 0 && Array.isArray(data[0].reviews_json)
-        ? data[0].reviews_json
-        : []
-
-    // Filter for this walker
-    if (walker.value) {
-      reviews.value = allReviews.filter(
-        r => r.receiver_id === walker.value!.id
-      )
-    } else {
-      reviews.value = []
-    }
-
-    console.log('Filtered reviews for walker:', reviews.value)
-  } catch (err) {
-    console.error('Error fetching reviews:', err)
-    reviews.value = []
-  }
-}
-
-
-
-
-onMounted(fetchWalker)
-</script>
-
-
 <style scoped>
 .walker-page {
-  margin: 0 auto;
-  font-family: Inter, Arial, sans-serif;
-  background: #f6f2ea;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+}
+
+.content-container {
+  flex: 1; 
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -129,6 +153,12 @@ onMounted(fetchWalker)
   margin-top: 40px;
   font-size: 1.2rem;
   color: #555;
+}
+.walkers-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+
 }
 
 .content {
@@ -187,6 +217,7 @@ onMounted(fetchWalker)
   align-self: flex-start;
 }
 
+
 @media (max-width: 900px) {
   .content {
     padding: 18px;
@@ -202,5 +233,6 @@ onMounted(fetchWalker)
     min-width: auto;
     max-width: 100%;
   }
+  
 }
 </style>
