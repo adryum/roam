@@ -2,18 +2,25 @@
   <ul class="review-list">
     <li v-for="(r, idx) in visibleReviews" :key="idx" class="review">
       <div class="review-head">
-        <div class="review-user">{{ r.user }}</div>
-        <StarRating :value="r.rating" />
+        <div class="review-user">{{ r.creators_fullname }}</div>
+        <StarRating :value="r.stars" />
       </div>
+
       <div class="review-title">{{ r.title }}</div>
+
       <div class="review-content">
         <div class="review-body">{{ r.content }}</div>
-        <div class="review-date">{{ r.date }}</div>
+        <div class="review-date">
+          {{ new Date(r.creation_date).toLocaleDateString() }}
+        </div>
       </div>
     </li>
   </ul>
+
   <div class="reviews-action" v-if="reviews.length > 3">
-    <button class="show-reviews-btn" @click="showAll = !showAll">{{ showAll ? 'Show less' : 'Show more' }}</button>
+    <button class="show-reviews-btn" @click="showAll = !showAll">
+      {{ showAll ? 'Show less' : 'Show more' }}
+    </button>
   </div>
 </template>
 
@@ -28,7 +35,6 @@ const props = defineProps({
   }
 })
 
-// Show/hide more reviews
 const showAll = ref(false)
 
 const visibleReviews = computed(() => {
@@ -36,6 +42,7 @@ const visibleReviews = computed(() => {
   return showAll.value ? arr : arr.slice(0, 3)
 })
 </script>
+
 
 
 <style scoped>

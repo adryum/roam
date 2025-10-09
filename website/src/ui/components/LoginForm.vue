@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRegistration } from '@/core/composables/useRegistration'
+import Header from '@/ui/components/Header.vue';
+import Footer from '@/ui/components/Footer.vue';
 
 const { isLoggedIn, currentUser, logIn, signUp, logOut, loading, error } = useRegistration()
 
@@ -18,6 +20,7 @@ function handleSignUp() {
 </script>
 
 <template>
+  <Header />
   <div class="login-form">
     <h1>Are you logged in?: {{ isLoggedIn }}</h1>
 
@@ -47,6 +50,7 @@ function handleSignUp() {
       </section>
     </div>
   </div>
+  <Footer />
 </template>
 
 <style lang="scss" scoped>

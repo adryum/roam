@@ -2,21 +2,23 @@
   <header class="header">
     <div>
       <router-link to="/">
-        <img class="logo" src="/assets/logo.png"></img>
+        <img class="logo" src="/assets/logo.png" />
       </router-link>
     </div>
     <div class="right-section">
       <nav class="nav">
         <router-link to="/">Home</router-link>
-        <a href="#">Walkers</a>
-        <a href="#">About us</a>
+        <router-link to="/walker">Walkers</router-link>
+        <router-link to="/aboutus">About Us</router-link>
       </nav>
-      <button class="login-btn">Register/Login</button>
+      <router-link to="/login" class="login-btn">
+        Register/Login
+      </router-link>
     </div>
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 </script>
 
 <style scoped>
@@ -27,7 +29,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 .logo {
@@ -46,7 +48,8 @@
   gap: 28px;
 }
 
-.nav a {
+.nav a,
+.nav router-link {
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -54,19 +57,20 @@
   transition: all 0.2s ease;
 }
 
-.nav a:hover {
+.nav a:hover,
+.nav router-link:hover {
   text-decoration: underline;
   font-size: 16px;
 }
 
 .login-btn {
   background: #d6b993;
-  border: none;
   border-radius: 6px;
   padding: 6px 14px;
   color: #fff;
   font-size: 13px;
   cursor: pointer;
+  text-decoration: none;
   transition: background 0.2s ease;
 }
 
