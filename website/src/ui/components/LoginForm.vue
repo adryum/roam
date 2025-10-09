@@ -139,4 +139,3 @@ watch(isLoggedIn, (newVal) => {
 }
 </style>
 
-

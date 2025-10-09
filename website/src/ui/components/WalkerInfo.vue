@@ -1,15 +1,18 @@
 <template>
   <div class="walker-info">
     <div class="walker-container">
-      <h1>{{ walker.name }}</h1>
+      <h1>{{ walker.name }} {{ walker.surname }}</h1>
+
       <div class="rating-row">
         <p><b>Professional Dog walker</b></p>
         <StarRating :value="averageRating" />
         <div class="price">10-16$/h</div>
       </div>
-      <p class="short-desc">{{ walker.shortDescription }}</p>
-      <ul class="desc-list">
-        <li v-for="(d, i) in walker.details" :key="i">{{ d }}</li>
+
+      <p class="short-desc">{{ walker.description }}</p>
+
+      <ul class="desc-list" v-if="walker.description_dots?.length">
+        <li v-for="(d, i) in walker.description_dots" :key="i">{{ d.point }}</li>
       </ul>
 
       <CalendarCard
@@ -19,142 +22,121 @@
         @update:date="selectedDate = $event"
         @update:time="selectedTime = $event"
         @submit="submitSchedule"
-        />
-        <p v-if="scheduledMessage" class="scheduled-msg">{{ scheduledMessage }}</p>
+      />
+
+      <p v-if="scheduledMessage" class="scheduled-msg">{{ scheduledMessage }}</p>
     </div>
 
     <div class="walker-photo-wrap">
-      <img class="walker-photo" :src="walker.photoUrl" :alt="walker.name" />
+      <img class="walker-photo" :src="walker.profile_picture || ''" :alt="walker.name" />
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import type { UserModel, ReviewModel } from '@/core/api/Models'
 import StarRating from './StarRating.vue'
 import CalendarCard from './CalendarCard.vue'
-import { useHome } from '@/core/composables/useWalkerInfo'
-import { mount } from '@vue/test-utils'
 
-// Define props once and get a variable
-const props = defineProps({
-  walker: {
-    type: Object,
-    required: true
-  }
-})
-// example how to get variables from store to show reactive values
-// const { isLoggedIn } = useRegistration()
+// Extend UserModel with optional fields for frontend display
+interface ExtendedUserModel extends UserModel {
+  description_dots?: { point: string }[]
+  photoUrl?: string
+}
 
-// doesnt work with this uncommented, idk
-// const walker = ref(null)
-// const { walkerInfo } = useHome() 
-// onMounted(() => {
-//   walker.value = walkerInfo()
-// })
+const props = defineProps<{
+  walker: ExtendedUserModel
+  reviews?: ReviewModel[]
+}>()
 
-// Calendar / scheduling
-const showCalendar = ref(false)
+// Reactive calendar state
 const selectedDate = ref('')
 const selectedTime = ref('')
 const scheduledMessage = ref('')
 
-// Time slots
-const timeSlots = (() => {
-  const slots = []
-  for (let h = 8; h <= 18; h++) {
-    slots.push(`${String(h).padStart(2, '0')}:00`)
-    if (h !== 18) slots.push(`${String(h).padStart(2, '0')}:30`)
-  }
-  return slots
-})()
-
-// Average rating computed from walker reviews
-const averageRating = computed(() => {
-  const reviews = props.walker.reviews || []
-  return reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0
+// Generate half-hour time slots
+const timeSlots = Array.from({ length: 22 }, (_, i) => {
+  const h = Math.floor(i / 2) + 8
+  const m = i % 2 === 0 ? '00' : '30'
+  return `${String(h).padStart(2, '0')}:${m}`
 })
 
+// Compute average rating from reviews
+const averageRating = computed(() => {
+  const revs = props.reviews || []
+  if (!revs.length) return 0
+  const total = revs.reduce((sum, r) => sum + (r.stars || 0), 0)
+  return Math.round((total / revs.length) * 10) / 10
+})
 
-// Submit schedule
-function submitSchedule({date, time} = {}) {
+// Submit booking schedule
+function submitSchedule({ date, time }: { date: string; time: string } = {} as any) {
   if (!date || !time) return
-  console.log(date)
   scheduledMessage.value = `Booked with ${props.walker.name} on ${date} at ${time}.`
 }
-
 </script>
 
 <style scoped>
-.walker-info { 
-   align-items: stretch;
-    position: relative;
-    flex-wrap: wrap;
-    display:flex;
-    gap:36px;
-    justify-content:center;
-    width:100%;
-    max-width:980px;
-    margin-bottom:20px; } 
-.walker-container { 
-    display: flex;
-    min-width:480px;
-    max-width:520px; 
-    text-align:left;
-    flex-direction: column;
-    min-height: 100%; 
-  } 
-  .walker-text h1 { margin:0 0 8px; 
-    font-size:28px; } 
-  .role { 
-    font-weight:700; 
-    color:#222;
-    margin-bottom:8px; } 
-  .rating-row { 
-    display:flex; 
-    align-items:center; 
-    gap:12px; 
-  } 
-  .price { 
-    font-weight:700; 
-    color:#222; }
-  .desc-list { 
-    padding-left:18px;
-    color:#444; } 
-   
-  .walker-photo-wrap { 
-    display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    position: sticky;
-    top: 20px; 
-    align-self: flex-start; } 
-  .walker-photo { 
-    width:260px; 
-    height: auto;
-    object-fit:cover; 
-    border-radius:8px; 
-    box-shadow: 0 8px 24px 
-    rgba(0,0,0,0.08); }
+.walker-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  justify-content: center;
+  max-width: 980px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.walker-container {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  min-width: 480px;
+  max-width: 520px;
+}
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.price {
+  font-weight: 700;
+}
+.desc-list {
+  padding-left: 18px;
+  color: #444;
+}
+.walker-photo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+}
+.walker-photo {
+  width: 260px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
 
-  @media (max-width: 900px) {
-    .walker-info {
+@media (max-width: 900px) {
+  .walker-info {
     align-items: center;
     gap: 20px;
-    }
-    .walker-container {
-      max-width: 90%;
-      min-width: unset;
-    }
-
-    .walker-photo {
-      width: 80%;
-      height: auto;
-      max-height: 400px;
-    }
-
-    .rating-row {
-      flex-wrap: wrap; /* allow rating and price to wrap */
-    }
   }
+  .walker-container {
+    max-width: 90%;
+    min-width: unset;
+  }
+  .walker-photo {
+    width: 80%;
+    max-height: 400px;
+  }
+  .rating-row {
+    flex-wrap: wrap;
+  }
+}
 </style>

@@ -19,6 +19,18 @@ export type UserModel = {
     profile_picture: string,
     role: string
 }
+export type ReviewModel = {
+  id: number
+  stars: number
+  title: string
+  content: string
+  creator_id: number
+  receiver_id: number
+  creation_date: string
+  creators_fullname: string
+  receivers_fullname: string
+}
+
 
 
 export type RegistrationUserModel = {

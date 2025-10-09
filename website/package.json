@@ -18,7 +18,7 @@
     "@popperjs/core": "^2.11.8",
     "@vueuse/core": "^13.9.0",
     "axios": "^1.11.0",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.3",
     "leaflet": "^1.9.4",
     "motion-v": "^1.7.1",
     "pinia": "^3.0.3",

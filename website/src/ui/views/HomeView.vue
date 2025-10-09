@@ -32,8 +32,8 @@
 
 <script setup>
 import TeamCard from '../components/TeamCard.vue';
-import Header from '@/ui/components/Header.vue'
-import Footer from '@/ui/components/Footer.vue'
+import Header from '@/ui/components/Header.vue';
+import Footer from '@/ui/components/Footer.vue';
 </script>
 
 <style lang="scss" scoped>
