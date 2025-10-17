@@ -40,7 +40,6 @@ router.get('/', async (req: Request, res) => {
     }    
 })
 
-
 router.post('/delete', upload.none(), async (req: Request<{},{}, {
     id: number
 }>, res: Response) => {
@@ -109,6 +108,63 @@ router.post('/create', upload.single('image'), async (req: Request<{},{}, {
                 species, 
                 description, 
                 age
+            ]
+        )
+
+        const [[getResponse]] = await db.query<RowDataPacket[]>(getPetsQuery + " WHERE p.id = ?",
+            [response.insertId]
+        )
+
+        log(getResponse)
+
+        if (getResponse) {
+            return res.status(200).json(getResponse);
+        } else {
+            res.status(401).send('Failed creating reservation')
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+})
+
+// create reservation
+router.post('/update', upload.single('image'), async (req: Request<{},{}, {
+    id: number
+    name: string
+    species: string
+    description: string
+    age: number
+}>, res: Response) => {
+    const { 
+        id,
+        name,  
+        species, 
+        description, 
+        age
+    } = req.body
+    const file  = req.file
+
+    // missing credentials
+    if (!IsNumber(id) || id < 0 || !name || !species || !description || !IsNumber(age)) {
+        console.error("Missing credentials!");
+        
+        return res.status(401).send('missing information!') 
+    }
+
+    try {
+        // create entry
+        const [response] = await db.query<ResultSetHeader>(`
+            UPDATE pets
+            SET name = ?, species = ?, description = ?, age = ?
+            WHERE id = ?; 
+            `, 
+            [
+                name, 
+                species, 
+                description, 
+                age,
+                id
             ]
         )
 

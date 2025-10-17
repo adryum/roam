@@ -54,10 +54,8 @@ async function saveName() {
   user.value.surname = surnameDraft.value.trim()
   editingName.value = false
 
-
   localStorage.setItem('user', JSON.stringify(user.value))
 }
-
 
 function logout() {
   regStore.logOut()

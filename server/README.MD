@@ -110,6 +110,37 @@ Atbilde:
 ]
 ```
 
+#### Update user.
+Pieprasījums: GET
+```
+uz: /users/update
+
+{ // Visiem fieldiem/parametriem ir jābūt aizpildītiem!!!
+    id: int
+    name: string
+    surname: string
+    description: string
+    role: string
+}
+```
+
+Atbilde: 
+```
+{
+    id: int,
+    name: string,
+    surname: string,
+    profile_picture: string,
+    description: string,
+    role: string,
+    description_dots: [
+        {
+            point: string
+        }
+    ]
+}
+```
+
 ### Reviews
 
 #### Get all reviews.
@@ -135,7 +166,7 @@ Atbilde:
     }
 ]
 ```
-
+#### Create reiview.
 Pieprasījums: POST
 ```
 uz: /reviews/create
@@ -166,7 +197,7 @@ Atbilde:
 ]
 ```
 
-
+#### Delete reiview.
 Pieprasījums: POST
 ```
 uz: /reviews/delete
@@ -207,7 +238,7 @@ uz: /pets/
     }
 ]
 ```
-
+#### Create pet.
 Pieprasījums: POST
 ```
 uz: /pets/create
@@ -238,7 +269,7 @@ Atbilde:
 }
 ```
 
-
+#### Delete pet.
 Pieprasījums: POST
 ```
 uz: /pets/delete
@@ -254,7 +285,35 @@ Atbilde:
     "deletedPetId": int
 }
 ```
+#### Update pet.
+Pieprasījums: POST
+```
+uz: /pets/update
 
+{ // Visiem laukiem ir jābūt aizpildītiem!!!
+    id: int
+    name: string,
+    species: string,
+    description: string,
+    age: int,
+}
+```
+
+Atbilde: 
+```
+{
+    id: int,
+    owner_id: int,
+    name: string,
+    species: string,
+    age: int,
+    description: string,
+    picture: string,
+    tags: [
+        tag: string
+    ]
+}
+```
 ### Reservations
 #### Get all reservations.
 
@@ -295,7 +354,7 @@ uz: /rezervations/
     }
 ]
 ```
-
+#### Create reservation.
 Pieprasījums: POST
 ```
 uz: /reservation/create
@@ -345,7 +404,7 @@ Atbilde:
 }
 ```
 
-
+#### Delete reservation.
 Pieprasījums: POST
 ```
 uz: /reservation/delete
