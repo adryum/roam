@@ -5,6 +5,7 @@ import { useRegistrationStore } from '@/core/stores/registrationStore'
 import ProfileView from '@/ui/views/ProfileView.vue'
 import AboutUs from '@/ui/views/AboutUs.vue'
 import RegistrationView from '@/ui/views/RegistrationView.vue'
+import AdminView from '@/ui/views/AdminView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,11 @@ const router = createRouter({
       name: 'walker',
       component: WalkerView,
       props: true
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView 
     }
 
   ],

@@ -5,17 +5,28 @@
         <img class="logo" src="/assets/logo.png" />
       </router-link>
     </div>
+
     <div class="right-section">
       <nav class="nav">
         <router-link to="/">Home</router-link>
         <router-link to="/walker">Walkers</router-link>
         <router-link to="/about">About Us</router-link>
+
+        <!-- Admin button only visible to logged-in users with role 'ADMIN' -->
+        <button
+          v-if="isAdmin"
+          class="admin-btn"
+          @click="$router.push('/admin')"
+          aria-label="Go to admin panel"
+        >
+          Admin
+        </button>
       </nav>
 
       <template v-if="isLoggedIn">
         <button class="login-btn" @click="$router.push('/profile')">Profile</button>
         <button class="logout-btn" @click="handleLogout">
-          <img class="logout-icon" src="/assets/logout.png"></img>
+          <img class="logout-icon" src="/assets/logout.png" />
         </button>
       </template>
 
@@ -34,7 +45,16 @@ import { useRegistrationStore } from '@/core/stores/registrationStore'
 import router from '@/core/router'
 
 const regStore = useRegistrationStore()
-const isLoggedIn = computed(() => regStore.isLoggedIn)
+
+// true when any user is logged in
+const isLoggedIn = computed(() => !!regStore.isLoggedIn)
+
+// true only when a logged-in user's role equals 'ADMIN'
+const isAdmin = computed(() => {
+
+
+  return !!regStore.isLoggedIn && regStore.user?.role === 'ADMIN'
+})
 
 function handleLogout() {
   regStore.logOut()
@@ -57,7 +77,8 @@ function handleLogout() {
 .logo {
   max-width: 20%;
 }
-.logout-icon{
+
+.logout-icon {
   max-height: 20px;
 }
 
@@ -70,7 +91,7 @@ function handleLogout() {
 .nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 16px;
 }
 
 .nav a {
@@ -86,9 +107,11 @@ function handleLogout() {
   font-size: 16px;
 }
 
+/* Buttons */
 .login-btn,
-.logout-btn {
-  margin:0;
+.logout-btn,
+.admin-btn {
+  margin: 0;
   background: #d6b993;
   border-radius: 6px;
   padding: 6px 14px;
@@ -98,13 +121,22 @@ function handleLogout() {
   font-weight: bold;
   text-decoration: none;
   transition: background 0.2s ease;
+  border: none;
 }
-.logout-btn{
+
+/* Admin button distinct color */
+.admin-btn {
+  background: #b19665;
+}
+
+/* Logout button distinct color */
+.logout-btn {
   background: #b54d4d;
 }
 
 .login-btn:hover,
-.logout-btn:hover {
+.logout-btn:hover,
+.admin-btn:hover {
   background: #c4a678;
 }
 </style>

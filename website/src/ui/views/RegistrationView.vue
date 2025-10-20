@@ -30,6 +30,9 @@ function validatePassword(password: string) {
   return password.length >= 8
 }
 
+// Backend URL
+const backendUrl = 'http://localhost:5000/registration'
+
 async function handleSignup() {
   errorMessage.value = ''
   if (!validateEmail(email.value)) {
@@ -43,14 +46,45 @@ async function handleSignup() {
 
   isLoading.value = true
   try {
-    const resp = await regStore.signUp(name.value, surname.value, email.value, password.value)
-    if (resp) {
-      await regStore.logIn(email.value, password.value)
-      if (regStore.isLoggedIn) router.push('/profile')
-    } else {
-      errorMessage.value = 'Signup failed. Please try again.'
+    // Signup request
+    const resp = await fetch(`${backendUrl}/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name.value,
+        surname: surname.value,
+        email: email.value,
+        password: password.value
+      })
+    })
+
+    if (!resp.ok) {
+      const text = await resp.text()
+      errorMessage.value = text || 'Signup failed. Please try again.'
+      return
     }
-  } catch {
+
+    const user = await resp.json()
+
+    // Auto login after signup
+    const loginResp = await fetch(`${backendUrl}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.value, password: password.value })
+    })
+
+    if (!loginResp.ok) {
+      const text = await loginResp.text()
+      errorMessage.value = text || 'Login after signup failed.'
+      return
+    }
+
+    const loggedInUser = await loginResp.json()
+    regStore.isLoggedIn = true
+    regStore.user = loggedInUser
+    router.push('/profile')
+  } catch (err) {
+    console.error(err)
     errorMessage.value = 'Unexpected error during signup.'
   } finally {
     isLoading.value = false
@@ -64,15 +98,33 @@ async function handleLogin() {
     return
   }
 
-  await regStore.logIn(email.value, password.value)
-  if (regStore.isLoggedIn) {
+  isLoading.value = true
+  try {
+    const resp = await fetch(`${backendUrl}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.value, password: password.value })
+    })
+
+    if (!resp.ok) {
+      const text = await resp.text()
+      errorMessage.value = text || 'Invalid email or password.'
+      return
+    }
+
+    const user = await resp.json()
+    regStore.isLoggedIn = true
+    regStore.user = user
     router.push('/profile')
-  } else {
-    errorMessage.value = 'Invalid email or password.'
+  } catch (err) {
+    console.error(err)
+    errorMessage.value = 'Unexpected error during login.'
+  } finally {
+    isLoading.value = false
   }
 }
 
-// Watch login status — redirect home if logged in
+// Watch login status and redirect home if logged in
 watch(() => regStore.isLoggedIn, (val) => {
   if (val) router.push('/')
 })

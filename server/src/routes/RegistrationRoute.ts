@@ -1,111 +1,93 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "../config/Database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
-import { upload } from "../config/Multer";
 
 const router = Router();
 
-// login user
-router.post('/login', upload.none(), async (req: Request<{},{}, {
-    email: string,
-    password: string
-}>, res: Response) => {
-    console.log(req.body);
-    const { email, password } = req.body
-    // missing credentials
-    if (!email || !password) 
-        return res.status(401).send('incorrect credentials!')
+// ----------------------------
+// Login user
+// ----------------------------
+router.post('/login', async (req: Request<{},{},{ email: string, password: string }>, res: Response) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).send('Missing credentials!');
+    }
 
     try {
         const [rows] = await db.query<RowDataPacket[]>(`
             SELECT *
             FROM users
             WHERE email = ?
-            LIMIT 1`, 
-            [email]
-        )
-        
-        const user = rows[0]
+            LIMIT 1
+        `, [email]);
 
-        // user isn't registered
+        const user = rows[0];
+
         if (!user) {
-            res.status(401).send('incorrect email!')
-            console.error("Incorrect email!");
-            
-            return
+            console.error("Incorrect email:", email);
+            return res.status(401).send('Incorrect email!');
         }
 
-        if (password === user['password']) {
-            console.log(user);
-            return res.status(201).json(user)
+        // Plain text password check for now (replace with bcrypt later)
+        if (password === user.password) {
+            console.log("Login success:", user);
+            return res.status(200).json(user);
         } else {
-            res.status(401).send('incorrect password')
+            console.error("Incorrect password for email:", email);
+            return res.status(401).send('Incorrect password!');
         }
     } catch (error) {
         console.error(error);
         return res.status(500).send('Server error');
     }
-})
+});
 
-// create user
-router.post('/signup', upload.none(), async (req: Request<{},{}, {
-    name: string
-    surname: string,
-    email: string
-    password: string
-}>, res: Response) => {
-    const { name, surname, email, password } = req.body
+// ----------------------------
+// Signup user
+// ----------------------------
+router.post('/signup', async (req: Request<{},{},{ name: string, surname: string, email: string, password: string }>, res: Response) => {
+    const { name, surname, email, password } = req.body;
 
-    // missing credentials
     if (!name || !surname || !email || !password) {
-        console.error("Missing credentials!");
-        
-        return res.status(401).send('missing credentials!') 
+        console.error("Missing signup credentials!");
+        return res.status(400).send('Missing credentials!');
     }
 
     try {
-        const [[alreadyRegisteredUser]] = await db.query<RowDataPacket[]>(`
+        const [[existingUser]] = await db.query<RowDataPacket[]>(`
             SELECT *
             FROM users
-            WHERE email = ?`, 
-            [email]
-        )
+            WHERE email = ?
+        `, [email]);
 
-        // user has already been registered
-        if (alreadyRegisteredUser) 
-            return res.status(401).send('this email is already registered!')
-
-        // creating user entry
-        const [response] = await db.query<ResultSetHeader>(`
-            INSERT INTO users
-            (name, 
-            surname, 
-            password, 
-            email, 
-            role)
-            VALUES (?, ?, ?, ?, ?)`, 
-            [name, surname, password, email, 'USER']
-        )
-
-        // get user info
-        const [[user]] = await db.query<RowDataPacket[]>(`
-            SELECT * 
-            FROM users
-            WHERE id = ?`, 
-            [response.insertId]
-        )
-
-        console.log(user);
-
-        if (user) {
-            res.status(201).json(user)
-        } else {
-            res.status(401).send('could not get registered user!')
+        if (existingUser) {
+            return res.status(409).send('This email is already registered!');
         }
+
+        // Insert new user (default role USER)
+        const [result] = await db.query<ResultSetHeader>(`
+            INSERT INTO users (name, surname, password, email, role)
+            VALUES (?, ?, ?, ?, ?)
+        `, [name, surname, password, email, 'USER']);
+
+        // Fetch newly created user
+        const [[newUser]] = await db.query<RowDataPacket[]>(`
+            SELECT *
+            FROM users
+            WHERE id = ?
+        `, [result.insertId]);
+
+        if (!newUser) {
+            return res.status(500).send('Could not retrieve registered user!');
+        }
+
+        console.log("Signup success:", newUser);
+        return res.status(201).json(newUser);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Server error');
+        return res.status(500).send('Server error');
     }
-})
+});
 
-export default router
+export default router;

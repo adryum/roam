@@ -214,7 +214,7 @@ CREATE TABLE `users` (
   `location` varchar(50) DEFAULT NULL,
   `description` varchar(500) DEFAULT NULL,
   `profile_picture` text,
-  `role` enum('USER','WALKER') DEFAULT NULL,
+  `role` enum('USER','WALKER','ADMIN') DEFAULT NULL,
   `email` varchar(50) DEFAULT NULL,
   `password` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -227,7 +227,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Igors','Litvjakovs','Tavs skapis','Mazs ar lielu personalitāti',NULL,'USER','qwerty@gmail.com','1234567890'),(2,'Kudrins','Nezinu','RVT Toalete','Patīk zvanīt',NULL,'USER','a@','123'),(3,'Jānis','Čaks','Ur moms house','Kruts dude','https://media.istockphoto.com/id/1090878494/photo/close-up-portrait-of-young-smiling-handsome-man-in-blue-polo-shirt-isolated-on-gray-background.jpg?s=612x612&w=0&k=20&c=AycQ2obu8sgJxWAJgYBbYR6jeRB9Bhs1JZBXzSgL6LE=','WALKER','asdasd@asda.com','12345'),(4,'Liene','Brasa','Rīga','5 gadu pieredze','https://cbx-prod.b-cdn.net/COLOURBOX61105480.jpg?width=800&height=800&quality=70','WALKER','liene@gmail.com','123'),(5,'Vilnis','Barakovs','Ogre','2 mēnešu pieredze','https://thumbs.dreamstime.com/b/portrait-handsome-smiling-young-man-folded-arms-smiling-joyful-cheerful-men-crossed-hands-isolated-studio-shot-172869765.jpg','WALKER','vilnis1@gmail.com','12345'),(6,'asd','trrt',NULL,NULL,NULL,'USER','s@','12345'),(7,'bfadf','sdfsdf',NULL,NULL,NULL,'USER','bars1@','123'),(8,'dfdfda','sdfdsf',NULL,NULL,NULL,'USER','fg@gmail.com','12345678'),(9,'vcbvc','vcbcvb',NULL,NULL,NULL,'USER','1@gmail.com','12345678'),(10,'sdf','sdf',NULL,NULL,NULL,'USER','asd@inbox.lv','12345678'),(11,'Andris','Kapka',NULL,NULL,NULL,'WALKER','kapka@gmail.com','12345678');
+INSERT INTO `users` VALUES (1,'Igors','Litvjakovs','Tavs skapis','Mazs ar lielu personalitāti',NULL,'ADMIN','qwerty@gmail.com','1234567890'),(2,'Kudrins','Nezinu','RVT Toalete','Patīk zvanīt',NULL,'USER','a@','123'),(3,'Jānis','Čaks','Ur moms house','Kruts dude','https://media.istockphoto.com/id/1090878494/photo/close-up-portrait-of-young-smiling-handsome-man-in-blue-polo-shirt-isolated-on-gray-background.jpg?s=612x612&w=0&k=20&c=AycQ2obu8sgJxWAJgYBbYR6jeRB9Bhs1JZBXzSgL6LE=','WALKER','asdasd@asda.com','12345'),(4,'Liene','Brasa','Rīga','5 gadu pieredze','https://cbx-prod.b-cdn.net/COLOURBOX61105480.jpg?width=800&height=800&quality=70','WALKER','liene@gmail.com','123'),(5,'Vilnis','Barakovs','Ogre','2 mēnešu pieredze','https://thumbs.dreamstime.com/b/portrait-handsome-smiling-young-man-folded-arms-smiling-joyful-cheerful-men-crossed-hands-isolated-studio-shot-172869765.jpg','WALKER','vilnis1@gmail.com','12345'),(6,'asd','trrt',NULL,NULL,NULL,'USER','s@','12345'),(7,'bfadf','sdfsdf',NULL,NULL,NULL,'USER','bars1@','123'),(8,'dfdfda','sdfdsf',NULL,NULL,NULL,'USER','fg@gmail.com','12345678'),(9,'vcbvc','vcbcvb',NULL,NULL,NULL,'USER','1@gmail.com','12345678'),(10,'sdf','sdf',NULL,NULL,NULL,'USER','asd@inbox.lv','12345678'),(11,'Andris','Kapka',NULL,NULL,NULL,'WALKER','kapka@gmail.com','12345678');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
