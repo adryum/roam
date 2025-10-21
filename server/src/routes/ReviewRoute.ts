@@ -66,6 +66,61 @@ router.post('/delete', upload.none(), async (req: Request<{},{}, {
         res.status(500).send('Server error');
     }
 })
+// POST /reviews/update
+router.post('/update', upload.none(), async (req: Request<{}, {}, {
+  id: number
+  title?: string
+  content?: string
+  stars?: number
+}>, res: Response) => {
+  const { id, title, content, stars } = req.body;
+
+  if (!IsNumber(id)) {
+    return res.status(400).send('Invalid review ID');
+  }
+
+  try {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (title !== undefined) {
+      fields.push('title = ?');
+      values.push(title);
+    }
+    if (content !== undefined) {
+      fields.push('content = ?');
+      values.push(content);
+    }
+    if (stars !== undefined) {
+      fields.push('stars = ?');
+      values.push(stars);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).send('Nothing to update');
+    }
+
+    values.push(id); // for WHERE id = ?
+    const query = `UPDATE reviews SET ${fields.join(', ')} WHERE id = ?`;
+    const [result] = await db.query<ResultSetHeader>(query, values);
+
+    if (result.affectedRows > 0) {
+      // fetch updated review to return
+      const [[review]] = await db.query<RowDataPacket[]>(
+        getReviewsQuery + " WHERE r.id = ?", 
+        [id]
+      );
+      return res.status(200).json(review);
+    } else {
+      return res.status(400).send('No rows updated');
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+})
+
 
 // create review
 router.post('/create', upload.none(), async (req: Request<{},{}, {
@@ -117,6 +172,61 @@ router.post('/create', upload.none(), async (req: Request<{},{}, {
         console.error(error);
         res.status(500).send('Server error');
     }
+    // POST /reviews/update
+router.post('/update', upload.none(), async (req: Request<{}, {}, {
+  id: number
+  title?: string
+  content?: string
+  stars?: number
+}>, res: Response) => {
+  const { id, title, content, stars } = req.body;
+
+  if (!IsNumber(id)) {
+    return res.status(400).send('Invalid review ID');
+  }
+
+  try {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (title !== undefined) {
+      fields.push('title = ?');
+      values.push(title);
+    }
+    if (content !== undefined) {
+      fields.push('content = ?');
+      values.push(content);
+    }
+    if (stars !== undefined) {
+      fields.push('stars = ?');
+      values.push(stars);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).send('Nothing to update');
+    }
+
+    values.push(id); // for WHERE id = ?
+    const query = `UPDATE reviews SET ${fields.join(', ')} WHERE id = ?`;
+    const [result] = await db.query<ResultSetHeader>(query, values);
+
+    if (result.affectedRows > 0) {
+      // fetch updated review to return
+      const [[review]] = await db.query<RowDataPacket[]>(
+        getReviewsQuery + " WHERE r.id = ?", 
+        [id]
+      );
+      return res.status(200).json(review);
+    } else {
+      return res.status(400).send('No rows updated');
+    }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
+
 })
 
 export default router;

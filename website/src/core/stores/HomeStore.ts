@@ -9,7 +9,8 @@ const homeApi = new HomeApi()
 export const useHomeStore = defineStore('home',  {
     state: () => ({
         pets: [] as PetModel[],
-        users: [] as UserModel[]
+        users: [] as UserModel[],
+        selectedWalker: null as UserModel | null
 
     }),
     actions: {

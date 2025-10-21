@@ -14,8 +14,9 @@
             v-model="selectedDate"
             is-inline
             :first-day-of-week="2"
-            :masks="masks"
             :show-weeknumbers="false"
+            :masks="masks"
+            :attributes="dateAttributes"
           />
 
           <!-- Time & location -->
@@ -30,13 +31,11 @@
               <option v-for="t in filteredEndTimes" :key="t" :value="t">{{ t }}</option>
             </select>
 
-
             <select v-model="localLocation">
               <option disabled value="">-- where? --</option>
               <option v-for="loc in locations" :key="loc" :value="loc">{{ loc }}</option>
             </select>
 
-            <!-- Buttons -->
             <div class="submit-row">
               <button
                 type="button"
@@ -48,7 +47,6 @@
               <button type="button" class="cancel" @click="closeCalendar">Cancel</button>
             </div>
 
-            <!-- Preview -->
             <div class="preview" v-if="localDate || localStartTime || localEndTime || localLocation">
               <small>
                 <strong>Selected:</strong>
@@ -65,108 +63,154 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { DatePicker as VDatePicker } from 'v-calendar'
 import 'v-calendar/style.css'
-import { useRegistrationStore } from '@/core/stores/registrationStore';
-import { useWalksStore } from '@/core/stores/WalkStore.ts';
+import { useRegistrationStore } from '@/core/stores/registrationStore'
+import { useWalksStore } from '@/core/stores/WalkStore.ts'
 
-const filteredEndTimes = computed(() => {
-  if (!localStartTime.value) return props.timeSlots;
-  const startIndex = props.timeSlots.indexOf(localStartTime.value);
-  return startIndex >= 0 ? props.timeSlots.slice(startIndex + 1) : props.timeSlots;
-});
+const regStore = useRegistrationStore()
+const walksStore = useWalksStore()
 
-
-// Props & emits
 const props = defineProps({
-  date: { type: String, default: '' },
-  startTime: { type: String, default: '' },
-  endTime: { type: String, default: '' },
-  location: { type: String, default: '' },
-  timeSlots: { type: Array, default: () => ['09:00', '10:00', '11:00', '12:00', '13:00'] },
-  locations: { type: Array, default: () => ['Rīga, Āgenskalns', 'Rīga, Mārupe', 'Rīga, Centrs', 'Rīga, Sarkandaugava', 'Ogre'] },
-  open: { type: Boolean, default: undefined }
+  walkerId: { type: Number, required: true },
+  timeSlots: { type: Array, default: () => ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30'] },
+  locations: { 
+    type: Array, 
+    default: () => [
+      'Rīga, Āgenskalns',
+      'Rīga, Mārupe',
+      'Rīga, Centrs',
+      'Rīga, Sarkandaugava',
+      'Ogre'
+    ] 
+  }
 })
-const regStore = useRegistrationStore();
-const walksStore = useWalksStore();
 
-const emit = defineEmits(['update:date', 'update:startTime', 'update:endTime', 'update:location', 'update:open', 'submit'])
-
-// Local state
-const localStartTime = ref(props.startTime || '')
-const localEndTime = ref(props.endTime || '')
-const localLocation = ref(props.location || '')
-const selectedDate = ref(props.date ? new Date(props.date) : null)
-const localOpen = ref(props.open ?? false)
-
+const localStartTime = ref('')
+const localEndTime = ref('')
+const localLocation = ref('')
+const selectedDate = ref(null)
+const localOpen = ref(false)
 const masks = { input: 'YYYY-MM-DD' }
 
-// Watchers: sync props <-> local state
-watch(() => props.startTime, v => { if (v !== localStartTime.value) localStartTime.value = v })
-watch(() => props.endTime, v => { if (v !== localEndTime.value) localEndTime.value = v })
-watch(() => props.location, v => { if (v !== localLocation.value) localLocation.value = v })
-watch(() => props.date, v => { selectedDate.value = v ? new Date(v) : null })
-watch(() => props.open, v => { if (v !== undefined) localOpen.value = v })
-
-// Emit updates
-watch(localStartTime, v => emit('update:startTime', v))
-watch(localEndTime, v => emit('update:endTime', v))
-watch(localLocation, v => emit('update:location', v))
-watch(localOpen, v => emit('update:open', v))
-watch(localStartTime, (newStart) => {
-  if (localEndTime.value && props.timeSlots.indexOf(localEndTime.value) <= props.timeSlots.indexOf(newStart)) {
-    localEndTime.value = '';
-  }
-});
-
-
-const formatDate = (d) => {
-  if (!d) return ''
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-watch(selectedDate, (d) => emit('update:date', formatDate(d)))
-
-const localDate = computed(() => formatDate(selectedDate.value))
 const isOpen = computed({
   get: () => localOpen.value,
   set: (v) => { localOpen.value = v }
 })
 
-// Methods
-function openCalendar() {
-  localOpen.value = !localOpen.value
-  if (localOpen.value && !selectedDate.value) selectedDate.value = new Date()
+function openCalendar() { 
+  localOpen.value = true
+  if (!selectedDate.value) selectedDate.value = new Date()
 }
-function closeCalendar() {
-  localOpen.value = false
+function closeCalendar() { localOpen.value = false }
+
+const formatDate = (d) => {
+  if (!d) return ''
+  const date = new Date(d)
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
 }
+
+const localDate = computed(() => formatDate(selectedDate.value))
+
+const filteredEndTimes = computed(() => {
+  if (!localStartTime.value) return props.timeSlots
+  const startIndex = props.timeSlots.indexOf(localStartTime.value)
+  return startIndex >= 0 ? props.timeSlots.slice(startIndex + 1) : props.timeSlots
+})
+
+// Fetch walks on mount
+onMounted(async () => {
+  if (props.walkerId) {
+    await walksStore.fetchWalks(props.walkerId)
+    console.log('Loaded walk dates:', walksStore.walks.map(w => w.walk_start_date_time))
+  }
+})
+
+const dateAttributes = computed(() => {
+  const attributes = []
+
+  walksStore.walks
+    .filter(w => w.walk_start_date_time)
+    .forEach(w => {
+      const [datePart] = w.walk_start_date_time.split('T')
+      const [year, month, day] = datePart.split('-').map(Number)
+      const localDate = new Date(year, month - 1, day)
+
+      attributes.push({
+        key: `scheduled-${localDate.getTime()}`,
+        dates: localDate,
+        highlight: {
+          fillMode: 'solid',
+          style: {
+            backgroundColor: '#22c55e',  
+            color: '#fff',                // text color
+            borderRadius: '50%',
+          }
+        }
+      })
+    })
+
+  if (selectedDate.value) {
+    const selDate = new Date(selectedDate.value)
+    selDate.setHours(0, 0, 0, 0)
+    attributes.push({
+      key: 'selected-date',
+      dates: selDate,
+      highlight: {
+        fillMode: 'solid',
+        style: {
+          backgroundColor: '#3b82f6', 
+          color: '#fff',
+          borderRadius: '50%',
+        }
+      }
+    })
+  }
+
+  return attributes
+})
+
+
+
+// Schedule walk
 async function submitForm() {
   if (!regStore.isLoggedIn) {
-    alert('You must be logged in to schedule a walk');
-    return;
+    alert('You must be logged in to schedule a walk')
+    return
+  }
+  if (!localDate.value || !localStartTime.value || !localEndTime.value || !localLocation.value) return
+
+  const payload = {
+    walkerId: props.walkerId,
+    clientId: regStore.user.id,
+    pathStartLocation: localLocation.value,
+    pathEndLocation: localLocation.value,
+    walkStartDate: `${localDate.value}T${localStartTime.value}:00`,
+    walkEndDate: `${localDate.value}T${localEndTime.value}:00`,
+    price: 20,
+    description: 'Scheduled via app',
+    assignedPets: []
   }
 
-  if (!localDate.value || !localStartTime.value || !localEndTime.value || !localLocation.value) return;
+  const result = await walksStore.scheduleWalk(payload)
 
-  const saved = await walksStore.scheduleWalk({
-    date: localDate.value,
-    startTime: localStartTime.value,
-    endTime: localEndTime.value,
-    location: localLocation.value
-  });
-
-  if (saved) {
-    alert('Walk successfully scheduled!');
-    closeCalendar();
+  if (result) {
+    // Refresh walks after scheduling
+    await walksStore.fetchWalks(props.walkerId)
+    alert('Walk successfully scheduled!')
+    closeCalendar()
   } else {
-    alert('Failed to schedule walk.');
+    alert('Failed to schedule walk.')
   }
 }
+
 </script>
+
+
 
 
 <style scoped>
@@ -246,6 +290,34 @@ select {
 
 .fade-enter-active, .fade-leave-active { transition: opacity .12s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.schedule-btn { 
+  background:#000; color:#fff; border-radius:8px; padding:10px 18px; border:0; cursor:pointer; width:100%;
+}
+
+/* Scheduled (green) */
+.vc-day .vc-highlight.scheduled-date {
+  --vc-highlight-solid-bg: #22c55e; /* bright green */
+  --vc-highlight-border-radius: 50%;
+}
+
+/* Selected (blue) */
+.vc-day .vc-highlight.selected-date {
+  --vc-highlight-solid-bg: #3b82f6; /* bright blue */
+  --vc-highlight-border-radius: 50%;
+}
+
+/* If both scheduled and selected, show blue circle with green ring */
+.vc-day .vc-highlight.scheduled-date.selected-date {
+  --vc-highlight-solid-bg: #3b82f6; /* blue inside */
+  box-shadow: 0 0 0 3px #22c55e inset; /* green ring */
+}
+.vc-day-content.vc-highlight-content-solid.vc-#22c55e {
+  background-color: #22c55e !important;
+  color: #fff !important;
+}
+
+
 
 @media (max-width: 800px) {
   .calendar-card {

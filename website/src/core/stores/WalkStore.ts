@@ -1,33 +1,55 @@
-import { defineStore } from 'pinia';
-import axios from 'axios';
+// core/stores/WalkStore.ts
+import { defineStore } from 'pinia'
+import axios from 'axios'
+import { useRegistrationStore } from './registrationStore'
+
+interface WalkSchedulePayload {
+  walkerId: number
+  clientId: number
+  pathStartLocation: string
+  pathEndLocation: string
+  walkStartDate: string
+  walkEndDate: string
+  price: number
+  description: string
+  assignedPets: number[]
+}
 
 export const useWalksStore = defineStore('walks', {
   state: () => ({
-    walks: [] as Array<{ id:number, date:string, startTime:string, endTime:string, location:string }>,
-    loading: false
+    walks: [] as any[],  // all walks for current walker
+    isLoading: false,
   }),
 
   actions: {
-    async fetchWalks() {
-      this.loading = true;
+    async fetchWalks(walkerId: number) {
+      this.isLoading = true
       try {
-        const { data } = await axios.get('/api/walks');
-        this.walks = data;
+        // Updated endpoint for a specific walker
+        const { data } = await axios.get(`http://localhost:5000/reservations/walker/${walkerId}`)
+
+        this.walks = Array.isArray(data) ? data : []
+      } catch (err) {
+        console.error('fetchWalks error:', err)
+        this.walks = []
       } finally {
-        this.loading = false;
+        this.isLoading = false
       }
     },
 
-    async scheduleWalk(payload: { date:string, startTime:string, endTime:string, location:string }) {
-      if (!payload.date || !payload.startTime || !payload.endTime || !payload.location) return null;
+    async scheduleWalk(payload: WalkSchedulePayload) {
       try {
-        const { data } = await axios.post('/api/walks', payload);
-        this.walks.push(data); // immediately update local state
-        return data;
+        const response = await axios.post('http://localhost:5000/reservations/create', payload);
+        return response.data // returns the created reservation
       } catch (err) {
-        console.error('Failed to schedule walk', err);
-        return null;
+        console.error('Failed to schedule walk', err)
+        return null
       }
+    },
+
+    isDateBooked(date: string) {
+      // Highlight booked dates
+      return this.walks.some(w => w.walk_start_date_time.startsWith(date))
     }
   }
-});
+})

@@ -16,9 +16,11 @@
       </ul>
 
       <CalendarCard
+        :walker-id="walker.id"
         :date="selectedDate"
         :time="selectedTime"
         :time-slots="timeSlots"
+        :locations="locations"
         @update:date="selectedDate = $event"
         @update:time="selectedTime = $event"
         @submit="submitSchedule"
@@ -50,8 +52,16 @@ const props = defineProps<{
   reviews?: ReviewModel[]
 }>()
 
+const locations = ref([
+  'Rīga, Āgenskalns',
+  'Rīga, Mārupe',
+  'Rīga, Centrs',
+  'Rīga, Sarkandaugava',
+  'Ogre'
+])
+
 // Reactive calendar state
-const selectedDate = ref('')
+const selectedDate = ref(new Date())  // default to today
 const selectedTime = ref('')
 const scheduledMessage = ref('')
 

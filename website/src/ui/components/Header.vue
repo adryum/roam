@@ -57,7 +57,7 @@ const isAdmin = computed(() => {
 })
 
 function handleLogout() {
-  regStore.logOut()
+  regStore.logout()
   router.push('/registration')
 }
 </script>

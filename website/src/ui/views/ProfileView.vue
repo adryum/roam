@@ -8,17 +8,17 @@ import Header from '@/ui/components/Header.vue'
 import Footer from '@/ui/components/Footer.vue'
 import CalendarCard from '../components/CalendarCard.vue'
 import Map from '../components/Map.vue'
-
 import { useWalksStore } from '@/core/stores/WalkStore.ts';
+
 const walksStore = useWalksStore();
-onMounted(() => {
-  if (regStore.isLoggedIn) walksStore.fetchWalks();
-});
-
-
 const regStore = useRegistrationStore()
 const { user, isLoggedIn } = storeToRefs(regStore)
 
+onMounted(async () => {
+  if (regStore.isLoggedIn && user.value?.id) {
+    await walksStore.fetchWalks(user.value.id)
+  }
+})
 
 const fullName = computed(() =>
   user.value ? `${user.value.name} ${user.value.surname}` : '—'
@@ -58,7 +58,7 @@ async function saveName() {
 }
 
 function logout() {
-  regStore.logOut()
+  regStore.logout()
   router.push('/registration')
 }
 

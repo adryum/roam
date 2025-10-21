@@ -82,6 +82,10 @@ async function handleSignup() {
     const loggedInUser = await loginResp.json()
     regStore.isLoggedIn = true
     regStore.user = loggedInUser
+
+    localStorage.setItem('user', JSON.stringify(loggedInUser))
+    window.location.reload()
+
     router.push('/profile')
   } catch (err) {
     console.error(err)
@@ -115,6 +119,10 @@ async function handleLogin() {
     const user = await resp.json()
     regStore.isLoggedIn = true
     regStore.user = user
+
+    localStorage.setItem('user', JSON.stringify(user))
+    window.location.reload()
+
     router.push('/profile')
   } catch (err) {
     console.error(err)
@@ -139,7 +147,23 @@ function switchToSignup() {
   router.replace({ path: '/registration', query: { mode: 'signup' } })
 }
 
+// Logout function
+function handleLogout() {
+  regStore.isLoggedIn = false
+  regStore.user = null
+  localStorage.removeItem('user')
+  router.push('/registration')
+}
+
 onMounted(() => {
+  // Restore login from localStorage
+  const storedUser = localStorage.getItem('user')
+  if (storedUser) {
+    regStore.user = JSON.parse(storedUser)
+    regStore.isLoggedIn = true
+    router.push('/profile')
+  }
+
   if (route.query.mode === 'login') activeForm.value = 'login'
 })
 </script>

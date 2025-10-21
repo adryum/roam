@@ -13,23 +13,47 @@ export const useRegistrationStore = defineStore('registration', {
   }),
 
   actions: {
+    // ===== AUTH-LIKE FUNCTIONS =====
+
+    loadUser() {
+      const data = localStorage.getItem('user')
+      if (data) {
+        try {
+          this.user = JSON.parse(data)
+          this.isLoggedIn = true
+        } catch {
+          this.user = null
+          this.isLoggedIn = false
+        }
+      }
+    },
+
+    setUser(user: RegistrationUserModel) {
+      this.user = user
+      this.isLoggedIn = true
+      localStorage.setItem('user', JSON.stringify(user))
+    },
+
+    logout() {
+      this.user = null
+      this.isLoggedIn = false
+      localStorage.removeItem('user')
+    },
+
+    // ===== LOGIN / SIGNUP =====
+
     async logIn(email: string, password: string): Promise<void> {
       this.isLoadingLogin = true
       try {
         const response = await registrationApi.logIn(email, password)
         if (response) {
-          this.user = response
-          this.isLoggedIn = true
-
-          localStorage.setItem('user', JSON.stringify(response))
-          localStorage.setItem('isLoggedIn', 'true')
+          this.setUser(response)
         } else {
-          this.isLoggedIn = false
-          this.user = null
+          this.logout()
         }
       } catch (err: any) {
         console.error('Login error:', err)
-        this.isLoggedIn = false
+        this.logout()
       } finally {
         this.isLoadingLogin = false
       }
@@ -52,28 +76,9 @@ export const useRegistrationStore = defineStore('registration', {
         this.isLoadingSignUp = false
       }
     },
-    
-
-    logOut() {
-      this.isLoggedIn = false
-      this.user = null
-      localStorage.removeItem('user')
-      localStorage.removeItem('isLoggedIn')
-    },
 
     restoreSession() {
-      const savedUser = localStorage.getItem('user')
-      const savedLogin = localStorage.getItem('isLoggedIn') === 'true'
-      if (savedUser && savedLogin) {
-        try {
-          this.user = JSON.parse(savedUser)
-          this.isLoggedIn = true
-        } catch (e) {
-          console.warn('Failed to parse saved user:', e)
-          this.user = null
-          this.isLoggedIn = false
-        }
-      }
+      this.loadUser()
     },
   },
 })

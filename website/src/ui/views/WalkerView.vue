@@ -11,6 +11,7 @@ import ReviewsList from '@/ui/components/ReviewsList.vue'
 import Map from '@/ui/components/Map.vue'
 import TeamCard from '@/ui/components/TeamCard.vue'
 
+
 // Reactive state
 const route = useRoute()
 const walkerId = ref<number | null>(route.params.id ? Number(route.params.id) : null)
@@ -42,25 +43,45 @@ async function fetchWalkers() {
   }
 }
 
-
 async function fetchReviews() {
+  if (!walker.value) {
+    reviews.value = []
+    return
+  }
+
   try {
     const { data } = await axios.get('http://localhost:5000/reviews/')
-    const allReviews: ReviewModel[] =
-      Array.isArray(data) && data.length > 0 && Array.isArray(data[0].reviews_json)
-        ? data[0].reviews_json
-        : []
 
-    if (walker.value) {
-      reviews.value = allReviews.filter(r => r.receiver_id === walker.value!.id)
+    // data is an array, each item has a reviews_json array
+    const allReviews: ReviewModel[] = []
+
+    for (const item of data) {
+      if (item.reviews_json && Array.isArray(item.reviews_json)) {
+        // Extract only reviews for the current walker
+        const filtered = item.reviews_json.filter(
+          (r: ReviewModel) => r.receiver_id === walker.value!.id
+        )
+        allReviews.push(...filtered)
+      }
+    }
+
+    reviews.value = allReviews
+
+    if (reviews.value.length === 0) {
+      console.log(`Walker ${walker.value.id} has no reviews`)
     } else {
-      reviews.value = []
+      console.table(reviews.value)
     }
   } catch (err) {
-    console.error(err)
+    console.error('fetchReviews error:', err)
     reviews.value = []
   }
 }
+
+
+
+
+
 watch(
   () => route.params.id,
   (newId) => {
@@ -96,16 +117,18 @@ onMounted(fetchWalkers)
           <section class="reviews-section">
             <div class="reviews-header">
               <h2>Reviews</h2>
-              <div class="reviews-meta">({{ reviews.length }} reviews)</div>
+              <div class="reviews-meta">
+                ({{ reviews.length }} review{{ reviews.length === 1 ? '' : 's' }})
+              </div>
             </div>
 
             <div class="reviews-grid">
               <div class="reviews-list">
-                <ReviewsList :reviews="reviews" />
+                <ReviewsList :toUserId="walker.id" :reviews="reviews" />
               </div>
 
               <div class="map-wrapper" aria-label="Walker location map">
-                <Map />
+                <Map  v-if="walker?.id" :walker-id="walker.id" />
               </div>
             </div>
           </section>

@@ -6,27 +6,25 @@ import { RowDataPacket } from "mysql2";
 
 const router = Router();
 const getUsersQuery = `
-    SELECT
-        u.id AS id,
-        u.name AS name,
-        u.surname AS surname,
-        u.profile_picture AS profile_picture,
-        u.description AS description,
-        u.role AS role,
+  SELECT
+    u.id AS id,
+    u.name AS name,
+    u.surname AS surname,
+    u.location AS location,
+    u.profile_picture AS profile_picture,
+    u.description AS description,
+    u.role AS role,
+    (
+      SELECT COALESCE(
+        JSON_ARRAYAGG(JSON_OBJECT('point', udp.point)),
+        JSON_ARRAY()
+      )
+      FROM user_description_points AS udp
+      WHERE udp.user_id = u.id
+    ) AS description_dots
+  FROM users AS u
+`
 
-        -- Subquery for description_dots
-        (
-            SELECT COALESCE(
-                JSON_ARRAYAGG(
-                    JSON_OBJECT('point', udp.point)
-                ),
-                JSON_ARRAY()
-            )
-            FROM user_description_points AS udp
-            WHERE udp.user_id = u.id
-        ) AS description_dots
-    FROM users AS u
-    `
 
 router.get('/', async (req: Request, res) => {
     try {
@@ -39,7 +37,6 @@ router.get('/', async (req: Request, res) => {
         res.status(500).send('Server error');
     }    
 })
-
 router.get('/update', upload.single('image'), async (req: Request<{},{}, {
     id: number
     name: string
@@ -85,6 +82,28 @@ router.get('/update', upload.single('image'), async (req: Request<{},{}, {
         console.error(error);
         res.status(500).send('Server error');
     }    
-})
+});
+router.get('/:id', async (req: Request, res: Response) => {
+  const idParam = req.params.id;
+  if (!idParam) return res.status(400).json({ error: 'Missing ID parameter' });
+
+  const id = parseInt(idParam);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID parameter' });
+
+  const getUserByIdQuery = getUsersQuery + " WHERE u.id = ?";
+
+  try {
+    const [rows] = await db.query<RowDataPacket[]>(getUserByIdQuery, [id]);
+    if (!rows.length) return res.status(404).json({ error: 'User not found' });
+
+    return res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+
 
 export default router;

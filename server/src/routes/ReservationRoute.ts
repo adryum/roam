@@ -19,8 +19,6 @@ router.get('/', async (req: Request, res) => {
                 r.client_user_id AS client_id,
                 r.path_start AS path_start,
                 r.path_end AS path_end,
-                r.start_time AS start_time,
-                r.end_time AS end_time,
                 r.price AS price,
                 r.description AS description,
 
@@ -62,6 +60,36 @@ router.get('/', async (req: Request, res) => {
         res.status(500).send('Server error');
     }    
 })
+// GET /walks/walker/:walkerId
+router.get('/walker/:walkerId', async (req: Request, res: Response) => {
+  const walkerId = Number(req.params.walkerId)
+  if (!walkerId) return res.status(400).send('walkerId is required')
+
+  try {
+    const [walks] = await db.query<RowDataPacket[]>(`
+      SELECT
+        r.id AS id,
+        r.creation_date_time AS creation_date_time,
+        r.walk_start_date_time AS walk_start_date_time,
+        r.walk_end_date_time AS walk_end_date_time,
+        r.walker_user_id AS walker_id,
+        r.client_user_id AS client_id,
+        r.path_start AS path_start,
+        r.path_end AS path_end,
+        r.price AS price,
+        r.description AS description
+      FROM reservations AS r
+      WHERE r.walker_user_id = ?
+      ORDER BY r.walk_start_date_time ASC
+    `, [walkerId])
+
+    return res.status(200).json(walks)
+  } catch (err) {
+    console.error(err)
+    return res.status(500).send('Server error')
+  }
+})
+
 
 router.post('/delete', upload.none(), async (req: Request<{},{}, {
     id: number
@@ -114,6 +142,7 @@ router.post('/create', upload.none(), async (req: Request<{},{}, {
         description,
         assignedPets
     } = req.body
+    
 
     // missing credentials
     if (!IsNumber(walkerId) 
@@ -160,19 +189,16 @@ router.post('/create', upload.none(), async (req: Request<{},{}, {
         )
 
         // insert pets
-        assignedPets.forEach(async pet => {
-            await db.query<ResultSetHeader>(`
-                INSERT INTO reservation_pets (
-                    pet_id,
-                    reservation_id
-                )
-                VALUES (?, ?)`, 
-                [
-                    pet,
-                    createReservationResponse.insertId
-                ]
-            )
-        });
+        if (assignedPets && assignedPets.length > 0) {
+            for (const pet of assignedPets) {
+                await db.query<ResultSetHeader>(`
+                    INSERT INTO reservation_pets (pet_id, reservation_id)
+                    VALUES (?, ?)`,
+                    [pet, createReservationResponse.insertId]
+                );
+            }
+        }
+
 
         // get inserted reservation
         const [[getReservationResult]] = await db.query<RowDataPacket[]>(`
@@ -185,8 +211,6 @@ router.post('/create', upload.none(), async (req: Request<{},{}, {
                 r.client_user_id AS client_id,
                 r.path_start AS path_start,
                 r.path_end AS path_end,
-                r.start_time AS start_time,
-                r.end_time AS end_time,
                 r.price AS price,
                 r.description AS description,
 
