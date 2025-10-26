@@ -57,6 +57,32 @@ async function saveName() {
   localStorage.setItem('user', JSON.stringify(user.value))
 }
 
+async function deleteUser() {
+  if (!user.value?.id) return alert('User not found.')
+
+  const confirmDelete = confirm('Are you sure you want to delete this user? This action cannot be undone.')
+  if (!confirmDelete) return
+
+  try {
+    const response = await fetch(`http://localhost:5000/users/${user.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) throw new Error('Failed to delete user')
+
+    alert('User deleted successfully.')
+    regStore.logout()
+    router.push('/registration')
+  } catch (error) {
+    console.error(error)
+    alert('An error occurred while deleting the user.')
+  }
+}
+
+
 function logout() {
   regStore.logout()
   router.push('/registration')
@@ -108,9 +134,15 @@ async function saveDog() {
                 <button class="btn small primary" @click="saveName">Save</button>
                 <button class="btn small secondary" @click="cancelEditing">Cancel</button>
               </div>
-              <button class="edit-btn" title="Edit name" @click="startEditing">
-                <i class="fas fa-pen"></i>
-              </button>
+              <div class="header-actions">
+                <button class="edit-btn" title="Edit name" @click="startEditing">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="delete-btn" title="Delete user" @click="deleteUser">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+
             </div>
             <span class="badge">{{ role }}</span>
           </div>
@@ -317,6 +349,24 @@ async function saveDog() {
     border: 1px solid #ccc;
   }
 }
+
+.delete-btn {
+  background: #b54d4d;
+  color: #fff;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #992f2f;
+  }
+
+  i {
+    pointer-events: none;
+  }
+}
+
 
 .btn.small {
   padding: 0.4rem 0.8rem;

@@ -102,7 +102,26 @@ router.get('/:id', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
+router.delete(
+  '/:id',
+  async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+    const { id } = req.params
 
+    try {
+      const [result]: any = await db.execute('DELETE FROM users WHERE id = ?', [id])
+
+      if (!result || result.affectedRows === 0) {
+        res.status(404).json({ message: 'User not found' })
+        return
+      }
+
+      res.status(200).json({ message: 'User deleted successfully' })
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      res.status(500).json({ message: 'Error deleting user' })
+    }
+  }
+);
 
 
 
