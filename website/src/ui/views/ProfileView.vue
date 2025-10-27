@@ -6,20 +6,61 @@ import router from '@/core/router'
 
 import Header from '@/ui/components/Header.vue'
 import Footer from '@/ui/components/Footer.vue'
-import CalendarCard from '../components/CalendarCard.vue'
 import Map from '../components/Map.vue'
-import { useWalksStore } from '@/core/stores/WalkStore.ts';
 
-const walksStore = useWalksStore();
+// ---- State from auth store ----
 const regStore = useRegistrationStore()
 const { user, isLoggedIn } = storeToRefs(regStore)
 
+// ---- Local "walks" state (no WalkStore used) ----
+type Walk = {
+  id: number
+  date: string
+  startTime: string
+  endTime: string
+  location: string
+  price?: number | null
+  description?: string | null
+}
+const walks = ref<Walk[]>([])
+const walksLoading = ref(false)
+const walksError = ref<string | null>(null)
+
+async function loadClientWalks(clientId: number) {
+  walksLoading.value = true
+  walksError.value = null
+  try {
+    const res = await fetch(`http://localhost:5000/reservations/client/${clientId}`)
+    if (!res.ok) throw new Error(`Failed to load walks (${res.status})`)
+    const data = await res.json()
+    walks.value = Array.isArray(data) ? data : []
+  } catch (e: any) {
+    console.error(e)
+    walks.value = []
+    walksError.value = e?.message || 'Unknown error'
+  } finally {
+    walksLoading.value = false
+  }
+}
+
+// Load on mount and when user id changes
 onMounted(async () => {
-  if (regStore.isLoggedIn && user.value?.id) {
-    await walksStore.fetchWalks(user.value.id)
+  if (isLoggedIn.value && user.value?.id) {
+    await loadClientWalks(user.value.id)
   }
 })
+watch(
+  () => user.value?.id,
+  async (id) => {
+    if (isLoggedIn.value && id) {
+      await loadClientWalks(id)
+    } else {
+      walks.value = []
+    }
+  }
+)
 
+// ---- Computed user info ----
 const fullName = computed(() =>
   user.value ? `${user.value.name} ${user.value.surname}` : '—'
 )
@@ -33,12 +74,12 @@ const email = computed(() => user.value?.email || '—')
 const description = computed(() => user.value?.description || 'Nav apraksta')
 const descriptionDots = computed(() => user.value?.description_dots ?? [])
 
-// --- Editing state & handlers (name, surname, description, profile picture URL) ---
+// ---- Edit state (name, surname, description, profile picture URL via link) ----
 const editingProfile = ref(false)
 const nameDraft = ref('')
 const surnameDraft = ref('')
 const descriptionDraft = ref('')
-const profilePictureUrlDraft = ref('') // URL-based "upload"
+const profilePictureUrlDraft = ref('')
 const picturePreview = ref('')
 
 function startEditing() {
@@ -50,18 +91,15 @@ function startEditing() {
   picturePreview.value = profilePictureUrlDraft.value || '/assets/default-avatar.png'
   editingProfile.value = true
 }
-
 function cancelEditing() {
   editingProfile.value = false
 }
-
 watch(profilePictureUrlDraft, (v) => {
   picturePreview.value = (v && v.trim() !== '') ? v.trim() : '/assets/default-avatar.png'
 })
 
 async function saveProfile() {
   if (!user.value?.id) return
-
   try {
     const form = new FormData()
     form.append('id', String(user.value.id))
@@ -69,18 +107,16 @@ async function saveProfile() {
     form.append('surname', surnameDraft.value.trim())
     form.append('description', descriptionDraft.value.trim())
     form.append('role', user.value.role ?? '')
-    // NEW: pass the URL to the server
     form.append('profile_picture', profilePictureUrlDraft.value.trim())
 
     const res = await fetch('http://localhost:5000/users/update', {
       method: 'POST',
       body: form,
     })
-
     if (!res.ok) throw new Error('Failed to update user')
     const updated = await res.json()
 
-    // Merge server response into local user (keep e.g. email if server doesn't return it)
+    // merge server response to local user, keep fields server may not return (e.g., email)
     user.value = { ...user.value, ...updated }
     localStorage.setItem('user', JSON.stringify(user.value))
     editingProfile.value = false
@@ -90,10 +126,9 @@ async function saveProfile() {
   }
 }
 
-// --- Delete / Logout (unchanged) ---
+// ---- Delete / Logout ----
 async function deleteUser() {
   if (!user.value?.id) return alert('User not found.')
-
   const confirmDelete = confirm('Are you sure you want to delete this user? This action cannot be undone.')
   if (!confirmDelete) return
 
@@ -102,7 +137,6 @@ async function deleteUser() {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     })
-
     if (!response.ok) throw new Error('Failed to delete user')
 
     alert('User deleted successfully.')
@@ -117,33 +151,6 @@ async function deleteUser() {
 function logout() {
   regStore.logout()
   router.push('/registration')
-}
-
-// --- Walks / calendar demo (unchanged) ---
-const date = ref('')
-const startTime = ref('')
-const endTime = ref('')
-const location = ref('')
-const calendarOpen = ref(true)
-onMounted(() => (calendarOpen.value = true))
-const timeSlots = ['09:00','10:00','11:00','12:00','13:00','14:00']
-const locations = ['Rīga, Āgenskalns','Rīga, Mārupe','Rīga, Centrs','Rīga, Sarkandaugava','Ogre']
-function handleBooking(payload: { date: string; startTime: string; endTime: string; location: string }) {
-  alert(`Booked: ${payload.date} | ${payload.startTime} → ${payload.endTime} @ ${payload.location}`)
-}
-
-// --- Dog modal demo (unchanged) ---
-const dog = reactive({ id: 1, name: 'Pipariņš', species: 'Melns yorks', age: 3, description: 'Ļoti draudzīgs un enerģisks.' })
-const dogDraft = reactive({ ...dog })
-const dogModalOpen = ref(false)
-const saving = ref(false)
-function openDogModal() { Object.assign(dogDraft, dog); dogModalOpen.value = true }
-function closeDogModal() { dogModalOpen.value = false }
-async function saveDog() {
-  saving.value = true
-  try { Object.assign(dog, dogDraft); closeDogModal() }
-  catch (e) { console.error('Failed to save dog:', e); alert('Failed to save changes.') }
-  finally { saving.value = false }
 }
 </script>
 
@@ -167,7 +174,7 @@ async function saveDog() {
 
                 <textarea v-model="descriptionDraft" rows="3" placeholder="Description" />
 
-                <!-- NEW: Profile picture via URL -->
+                <!-- Profile picture via URL -->
                 <label class="label">Profile picture URL</label>
                 <input v-model="profilePictureUrlDraft" placeholder="https://example.com/photo.jpg" />
 
@@ -201,23 +208,23 @@ async function saveDog() {
             <li v-for="(dot, i) in descriptionDots" :key="i">• {{ dot.point }}</li>
           </ul>
 
-          <button class="dog-btn" @click="openDogModal">
-            <i class="fas fa-dog"></i> View Information About Your Dog
-          </button>
+          <div class="reservations">
+            <h2>Your Scheduled Walks</h2>
+
+            <div v-if="walksLoading">Loading walks…</div>
+            <div v-else-if="walksError" class="error">Error: {{ walksError }}</div>
+
+            <ul v-else>
+              <li v-for="walk in walks" :key="walk.id">
+                {{ walk.date }} | {{ walk.startTime }} → {{ walk.endTime }} | {{ walk.location }}
+              </li>
+              <li v-if="walks.length === 0">No walks scheduled yet.</li>
+            </ul>
+          </div>
 
           <button class="logout-btn" @click="logout">
             <i class="fas fa-sign-out-alt"></i> Logout
           </button>
-
-          <div class="reservations">
-            <h2>Your Scheduled Walks</h2>
-            <ul>
-              <li v-for="walk in walksStore.walks" :key="walk.id">
-                {{ walk.date }} | {{ walk.startTime }} → {{ walk.endTime }} | {{ walk.location }}
-              </li>
-              <li v-if="walksStore.walks.length === 0">No walks scheduled yet.</li>
-            </ul>
-          </div>
         </div>
 
         <!-- Right -->
@@ -229,42 +236,6 @@ async function saveDog() {
     </main>
 
     <Footer />
-
-    <!-- Dog modal -->
-    <teleport to="body">
-      <div v-if="dogModalOpen" class="modal-backdrop" @click.self="closeDogModal">
-        <div class="modal">
-          <div class="modal-header">
-            <h3>Dog Information</h3>
-            <button class="icon-btn" @click="closeDogModal">✕</button>
-          </div>
-          <div class="modal-body">
-            <div class="form-row">
-              <label>Name</label>
-              <input v-model="dogDraft.name" />
-            </div>
-            <div class="form-row">
-              <label>Breed</label>
-              <input v-model="dogDraft.species" />
-            </div>
-            <div class="form-row">
-              <label>Age</label>
-              <input type="number" v-model.number="dogDraft.age" />
-            </div>
-            <div class="form-row">
-              <label>Description</label>
-              <textarea v-model="dogDraft.description" rows="3" />
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn secondary" @click="closeDogModal">Cancel</button>
-            <button class="btn primary" :disabled="saving" @click="saveDog">
-              {{ saving ? 'Saving…' : 'Save changes' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </teleport>
   </div>
 </template>
 
@@ -313,38 +284,9 @@ async function saveDog() {
           font-size: 1.125rem;
         }
 
-        .dog-btn {
+        .reservations {
           margin-top: 1.5rem;
-          background: #000;
-          color: #fff;
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          font-weight: 600;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-
-          &:hover {
-            background: #333;
-          }
-        }
-
-        .calendar-section {
-          margin-top: 2rem;
-
-          h2 {
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-          }
-
-          :deep(.schedule-btn) {
-            display: none !important;
-          }
-          :deep(.calendar-card) {
-            display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
+          .error { color: #b54d4d; }
         }
       }
 
@@ -356,10 +298,6 @@ async function saveDog() {
         .profile-img {
           border-radius: 8px;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .map-wrap {
-          margin-top: 1rem;
         }
       }
     }

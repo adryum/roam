@@ -27,7 +27,7 @@ const getUsersQuery = `
 `;
 
 // ------------------------------------------------------------------
-// LIST USERS
+// GET all users
 // ------------------------------------------------------------------
 router.get("/", async (_req: Request, res: Response) => {
   try {
@@ -41,9 +41,7 @@ router.get("/", async (_req: Request, res: Response) => {
 });
 
 // ------------------------------------------------------------------
-// UPDATE USER (POST) — preferred path used by profile editor
-// Accepts multipart/form-data; fields in body.
-// Fields: id (required), name, surname, description, role?, profile_picture?
+// POST /users/update  (preferred) — update via body (FormData)
 // ------------------------------------------------------------------
 interface UpdateBody {
   id: number | string;
@@ -53,6 +51,7 @@ interface UpdateBody {
   role?: string;
   profile_picture?: string;
 }
+
 router.post(
   "/update",
   upload.single("image"), // kept for potential future file uploads
@@ -83,7 +82,7 @@ router.post(
           surname?.trim() ?? null,
           description?.trim() ?? null,
           role ?? null,
-          pictureUrl, // only updates if provided (non-null)
+          pictureUrl,
           userId,
         ]
       );
@@ -104,9 +103,7 @@ router.post(
 );
 
 // ------------------------------------------------------------------
-// UPDATE USER (GET) — backward-compat shim for old callers
-// Reads from query string so existing GET /users/update?... keeps working.
-// Fields: id (required), name?, surname?, description?, role?, profile_picture?
+// GET /users/update — backward compatibility route (old GET callers)
 // ------------------------------------------------------------------
 router.get(
   "/update",
@@ -173,7 +170,41 @@ router.get(
 );
 
 // ------------------------------------------------------------------
-// GET ONE USER
+// GET /users/:id/reservations — scheduled walks for a user (client)
+// Uses your actual schema: reservations with client_user_id, path_start, path_end,
+// walk_start_date_time, walk_end_date_time. :contentReference[oaicite:1]{index=1}
+// ------------------------------------------------------------------
+router.get("/:id/reservations", async (req: Request<{ id: string }>, res: Response) => {
+  const userId = Number(req.params.id);
+  if (!Number.isFinite(userId)) return res.status(400).json({ error: "Invalid user id" });
+
+  const sql = `
+    SELECT
+      r.id AS id,
+      r.client_user_id AS clientUserId,
+      r.walker_user_id AS walkerUserId,
+      DATE_FORMAT(r.walk_start_date_time, '%Y-%m-%d') AS date,
+      DATE_FORMAT(r.walk_start_date_time, '%H:%i') AS startTime,
+      DATE_FORMAT(r.walk_end_date_time, '%H:%i') AS endTime,
+      CONCAT(COALESCE(r.path_start, ''), ' → ', COALESCE(r.path_end, '')) AS location,
+      r.price AS price,
+      r.description AS description
+    FROM reservations r
+    WHERE r.client_user_id = ?
+    ORDER BY r.walk_start_date_time DESC
+  `;
+
+  try {
+    const [rows] = await db.query<RowDataPacket[]>(sql, [userId]);
+    return res.status(200).json(rows);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ------------------------------------------------------------------
+// GET /users/:id — fetch one user
 // ------------------------------------------------------------------
 router.get("/:id", async (req: Request, res: Response) => {
   const idParam = req.params.id;
@@ -196,7 +227,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 // ------------------------------------------------------------------
-// DELETE USER
+// DELETE /users/:id — delete user
 // ------------------------------------------------------------------
 router.delete(
   "/:id",
