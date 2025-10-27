@@ -1,8 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { log } from "console";
 import { db } from "../config/Database";
-// Multer is still imported, but we won't require a file upload anymore.
-// Keeping it doesn't hurt and preserves future flexibility.
 import { upload } from "../config/Multer";
 import { RowDataPacket } from "mysql2";
 
@@ -28,7 +26,9 @@ const getUsersQuery = `
   FROM users AS u
 `;
 
-// GET /users  -> list users
+// ------------------------------------------------------------------
+// LIST USERS
+// ------------------------------------------------------------------
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const [response] = await db.query(getUsersQuery);
@@ -40,27 +40,27 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
-// POST /users/update  -> update name, surname, description, role (optional), profile_picture (URL)
+// ------------------------------------------------------------------
+// UPDATE USER (POST) — preferred path used by profile editor
+// Accepts multipart/form-data; fields in body.
+// Fields: id (required), name, surname, description, role?, profile_picture?
+// ------------------------------------------------------------------
 interface UpdateBody {
   id: number | string;
-  name: string;
-  surname: string;
-  description: string;
+  name?: string;
+  surname?: string;
+  description?: string;
   role?: string;
-  profile_picture?: string; // URL string
+  profile_picture?: string;
 }
 router.post(
   "/update",
-  upload.single("image"), // kept for future file-based changes; ignored for URL updates
+  upload.single("image"), // kept for potential future file uploads
   async (req: Request<{}, {}, UpdateBody>, res: Response) => {
     const { id, name, surname, description, role, profile_picture } = req.body;
     const userId = Number(id);
+    if (!Number.isFinite(userId)) return res.status(400).json({ error: "Invalid user id" });
 
-    if (!Number.isFinite(userId)) {
-      return res.status(400).json({ error: "Invalid user id" });
-    }
-
-    // Optional: lightweight URL sanity check (won't block if blank/undefined)
     const pictureUrl =
       typeof profile_picture === "string" && profile_picture.trim() !== ""
         ? profile_picture.trim()
@@ -71,19 +71,19 @@ router.post(
         `
         UPDATE users
         SET
-          name = ?,
-          surname = ?,
-          description = ?,
+          name = COALESCE(?, name),
+          surname = COALESCE(?, surname),
+          description = COALESCE(?, description),
           role = COALESCE(?, role),
           profile_picture = COALESCE(?, profile_picture)
         WHERE id = ?;
         `,
         [
-          name?.trim() ?? "",
-          surname?.trim() ?? "",
-          description?.trim() ?? "",
+          name?.trim() ?? null,
+          surname?.trim() ?? null,
+          description?.trim() ?? null,
           role ?? null,
-          pictureUrl, // only overwrites when provided (non-null)
+          pictureUrl, // only updates if provided (non-null)
           userId,
         ]
       );
@@ -92,10 +92,7 @@ router.post(
         getUsersQuery + " WHERE u.id = ?",
         [userId]
       );
-
-      if (!updatedUser) {
-        return res.status(404).json({ error: "User not found after update" });
-      }
+      if (!updatedUser) return res.status(404).json({ error: "User not found after update" });
 
       log(updatedUser);
       return res.status(200).json(updatedUser);
@@ -106,7 +103,78 @@ router.post(
   }
 );
 
-// GET /users/:id  -> get one user
+// ------------------------------------------------------------------
+// UPDATE USER (GET) — backward-compat shim for old callers
+// Reads from query string so existing GET /users/update?... keeps working.
+// Fields: id (required), name?, surname?, description?, role?, profile_picture?
+// ------------------------------------------------------------------
+router.get(
+  "/update",
+  async (
+    req: Request<
+      {},
+      {},
+      {},
+      {
+        id?: string;
+        name?: string;
+        surname?: string;
+        description?: string;
+        role?: string;
+        profile_picture?: string;
+      }
+    >,
+    res: Response
+  ) => {
+    const { id, name, surname, description, role, profile_picture } = req.query;
+    const userId = Number(id);
+    if (!Number.isFinite(userId)) return res.status(400).json({ error: "Invalid user id" });
+
+    const pictureUrl =
+      typeof profile_picture === "string" && profile_picture.trim() !== ""
+        ? profile_picture.trim()
+        : null;
+
+    try {
+      await db.query(
+        `
+        UPDATE users
+        SET
+          name = COALESCE(?, name),
+          surname = COALESCE(?, surname),
+          description = COALESCE(?, description),
+          role = COALESCE(?, role),
+          profile_picture = COALESCE(?, profile_picture)
+        WHERE id = ?;
+        `,
+        [
+          (name ?? "").trim() || null,
+          (surname ?? "").trim() || null,
+          (description ?? "").trim() || null,
+          role ?? null,
+          pictureUrl,
+          userId,
+        ]
+      );
+
+      const [[updatedUser]] = await db.query<RowDataPacket[]>(
+        getUsersQuery + " WHERE u.id = ?",
+        [userId]
+      );
+      if (!updatedUser) return res.status(404).json({ error: "User not found after update" });
+
+      log(updatedUser);
+      return res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
+// ------------------------------------------------------------------
+// GET ONE USER
+// ------------------------------------------------------------------
 router.get("/:id", async (req: Request, res: Response) => {
   const idParam = req.params.id;
   if (!idParam) return res.status(400).json({ error: "Missing ID parameter" });
@@ -127,7 +195,9 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// DELETE /users/:id  -> delete user
+// ------------------------------------------------------------------
+// DELETE USER
+// ------------------------------------------------------------------
 router.delete(
   "/:id",
   async (req: Request<{ id: string }>, res: Response): Promise<void> => {
