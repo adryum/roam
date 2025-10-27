@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRegistrationStore } from '@/core/stores/registrationStore'
 import router from '@/core/router'
@@ -33,30 +33,64 @@ const email = computed(() => user.value?.email || '—')
 const description = computed(() => user.value?.description || 'Nav apraksta')
 const descriptionDots = computed(() => user.value?.description_dots ?? [])
 
-const editingName = ref(false)
+// --- Editing state & handlers (name, surname, description, profile picture URL) ---
+const editingProfile = ref(false)
 const nameDraft = ref('')
 const surnameDraft = ref('')
+const descriptionDraft = ref('')
+const profilePictureUrlDraft = ref('') // URL-based "upload"
+const picturePreview = ref('')
 
 function startEditing() {
   if (!user.value) return
-  nameDraft.value = user.value.name
-  surnameDraft.value = user.value.surname
-  editingName.value = true
+  nameDraft.value = user.value.name ?? ''
+  surnameDraft.value = user.value.surname ?? ''
+  descriptionDraft.value = user.value.description ?? ''
+  profilePictureUrlDraft.value = user.value.profile_picture ?? ''
+  picturePreview.value = profilePictureUrlDraft.value || '/assets/default-avatar.png'
+  editingProfile.value = true
 }
 
 function cancelEditing() {
-  editingName.value = false
+  editingProfile.value = false
 }
 
-async function saveName() {
-  if (!user.value) return
-  user.value.name = nameDraft.value.trim()
-  user.value.surname = surnameDraft.value.trim()
-  editingName.value = false
+watch(profilePictureUrlDraft, (v) => {
+  picturePreview.value = (v && v.trim() !== '') ? v.trim() : '/assets/default-avatar.png'
+})
 
-  localStorage.setItem('user', JSON.stringify(user.value))
+async function saveProfile() {
+  if (!user.value?.id) return
+
+  try {
+    const form = new FormData()
+    form.append('id', String(user.value.id))
+    form.append('name', nameDraft.value.trim())
+    form.append('surname', surnameDraft.value.trim())
+    form.append('description', descriptionDraft.value.trim())
+    form.append('role', user.value.role ?? '')
+    // NEW: pass the URL to the server
+    form.append('profile_picture', profilePictureUrlDraft.value.trim())
+
+    const res = await fetch('http://localhost:5000/users/update', {
+      method: 'POST',
+      body: form,
+    })
+
+    if (!res.ok) throw new Error('Failed to update user')
+    const updated = await res.json()
+
+    // Merge server response into local user (keep e.g. email if server doesn't return it)
+    user.value = { ...user.value, ...updated }
+    localStorage.setItem('user', JSON.stringify(user.value))
+    editingProfile.value = false
+  } catch (error) {
+    console.error(error)
+    alert('Could not save changes. Please try again.')
+  }
 }
 
+// --- Delete / Logout (unchanged) ---
 async function deleteUser() {
   if (!user.value?.id) return alert('User not found.')
 
@@ -66,9 +100,7 @@ async function deleteUser() {
   try {
     const response = await fetch(`http://localhost:5000/users/${user.value.id}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     })
 
     if (!response.ok) throw new Error('Failed to delete user')
@@ -82,13 +114,12 @@ async function deleteUser() {
   }
 }
 
-
 function logout() {
   regStore.logout()
   router.push('/registration')
 }
 
-
+// --- Walks / calendar demo (unchanged) ---
 const date = ref('')
 const startTime = ref('')
 const endTime = ref('')
@@ -101,7 +132,7 @@ function handleBooking(payload: { date: string; startTime: string; endTime: stri
   alert(`Booked: ${payload.date} | ${payload.startTime} → ${payload.endTime} @ ${payload.location}`)
 }
 
-
+// --- Dog modal demo (unchanged) ---
 const dog = reactive({ id: 1, name: 'Pipariņš', species: 'Melns yorks', age: 3, description: 'Ļoti draudzīgs un enerģisks.' })
 const dogDraft = reactive({ ...dog })
 const dogModalOpen = ref(false)
@@ -116,7 +147,6 @@ async function saveDog() {
 }
 </script>
 
-
 <template>
   <div class="profile-view">
     <Header />
@@ -127,23 +157,41 @@ async function saveDog() {
         <div class="left">
           <div class="profile-header">
             <div class="header-top">
-              <h1 v-if="!editingName">{{ fullName }}</h1>
+              <!-- Title OR editor -->
+              <h1 v-if="!editingProfile">{{ fullName }}</h1>
               <div v-else class="edit-name">
-                <input v-model="nameDraft" placeholder="Name" />
-                <input v-model="surnameDraft" placeholder="Surname" />
-                <button class="btn small primary" @click="saveName">Save</button>
-                <button class="btn small secondary" @click="cancelEditing">Cancel</button>
+                <div class="grid-two">
+                  <input v-model="nameDraft" placeholder="Name" />
+                  <input v-model="surnameDraft" placeholder="Surname" />
+                </div>
+
+                <textarea v-model="descriptionDraft" rows="3" placeholder="Description" />
+
+                <!-- NEW: Profile picture via URL -->
+                <label class="label">Profile picture URL</label>
+                <input v-model="profilePictureUrlDraft" placeholder="https://example.com/photo.jpg" />
+
+                <div class="preview">
+                  <span>Preview:</span>
+                  <img :src="picturePreview" alt="Preview" />
+                </div>
+
+                <div class="edit-actions">
+                  <button class="btn small primary" @click="saveProfile">Save</button>
+                  <button class="btn small secondary" @click="cancelEditing">Cancel</button>
+                </div>
               </div>
+
               <div class="header-actions">
-                <button class="edit-btn" title="Edit name" @click="startEditing">
+                <button class="edit-btn" title="Edit profile" @click="startEditing">
                   <i class="fas fa-pen"></i>
                 </button>
                 <button class="delete-btn" title="Delete user" @click="deleteUser">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
-
             </div>
+
             <span class="badge">{{ role }}</span>
           </div>
 
@@ -170,7 +218,6 @@ async function saveDog() {
               <li v-if="walksStore.walks.length === 0">No walks scheduled yet.</li>
             </ul>
           </div>
-
         </div>
 
         <!-- Right -->
@@ -183,7 +230,7 @@ async function saveDog() {
 
     <Footer />
 
-
+    <!-- Dog modal -->
     <teleport to="body">
       <div v-if="dogModalOpen" class="modal-backdrop" @click.self="closeDogModal">
         <div class="modal">
@@ -220,7 +267,6 @@ async function saveDog() {
     </teleport>
   </div>
 </template>
-
 
 <style lang="scss">
 .profile-view {
@@ -312,7 +358,6 @@ async function saveDog() {
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* Map styling wrapper */
         .map-wrap {
           margin-top: 1rem;
         }
@@ -320,6 +365,7 @@ async function saveDog() {
     }
   }
 }
+
 .logout-btn {
   margin-top: 1rem;
   background: #b54d4d;
@@ -341,12 +387,48 @@ async function saveDog() {
 
 .edit-name {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 560px;
 
-  input {
+  .grid-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .label {
+    font-size: 0.9rem;
+    color: #333;
+  }
+
+  input, textarea {
     padding: 0.5rem 0.75rem;
     border-radius: 6px;
     border: 1px solid #ccc;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .preview {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    img {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #eee;
+      border: 1px solid #ddd;
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    gap: 0.5rem;
   }
 }
 
@@ -367,7 +449,6 @@ async function saveDog() {
   }
 }
 
-
 .btn.small {
   padding: 0.4rem 0.8rem;
   font-size: 0.9rem;
@@ -381,7 +462,6 @@ async function saveDog() {
   background: #e5e5e5;
 }
 
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -390,10 +470,15 @@ async function saveDog() {
   place-items: center;
   z-index: 1000;
 }
+
 .header-top{
-    display: flex;
-    flex-direction: row;
-  }
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+}
 
 .modal {
   width: min(520px, 96vw);
@@ -430,7 +515,6 @@ async function saveDog() {
       }
     }
   }
-  
 
   .modal-body {
     display: flex;
