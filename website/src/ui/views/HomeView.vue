@@ -6,7 +6,12 @@ import Header from '@/ui/components/Header.vue'
 import Footer from '@/ui/components/Footer.vue'
 import type { UserModel, ReviewModel } from '@/core/api/Models'
 
-const topWalkers = ref<UserModel[]>([])
+interface WalkerWithRating extends UserModel {
+  avgStars: number
+  location: string
+}
+
+const topWalkers = ref<WalkerWithRating[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 
@@ -14,28 +19,38 @@ async function fetchTopWalkers() {
   loading.value = true
   try {
     const usersResponse = await axios.get<UserModel[]>('http://localhost:5000/users/')
-    const reviewsResponse = await axios.get<ReviewModel[]>('http://localhost:5000/reviews/')
+    const reviewsResponse = await axios.get<any[]>('http://localhost:5000/reviews/')
 
     const walkers = usersResponse.data.filter(u => u.role?.toLowerCase() === 'walker')
 
-    const reviewsByWalker: Record<number, ReviewModel[]> = {}
-    reviewsResponse.data.forEach(r => {
-      if (!reviewsByWalker[r.receiver_id]) reviewsByWalker[r.receiver_id] = []
-      reviewsByWalker[r.receiver_id].push(r)
+    // Flatten all reviews from nested reviews_json
+    const allReviews: ReviewModel[] = []
+    reviewsResponse.data.forEach(item => {
+      if (item.reviews_json && Array.isArray(item.reviews_json)) {
+        allReviews.push(...item.reviews_json)
+      }
     })
 
-    const walkersWithAvgStars = walkers.map(w => {
-      const walkerReviews = reviewsByWalker[w.id] || []
+    // Compute avgStars for each walker
+    const walkersWithAvgStars: WalkerWithRating[] = walkers.map(w => {
+      const walkerReviews = allReviews.filter(r => r.receiver_id === w.id)
       const avgStars =
         walkerReviews.length > 0
-          ? walkerReviews.reduce((sum, r) => sum + r.stars, 0) / walkerReviews.length
+          ? walkerReviews.reduce((sum, r) => sum + Number(r.stars), 0) / walkerReviews.length
           : 0
-      return { ...w, avgStars }
+      return {
+        ...w,
+        avgStars,
+        location: w.location || 'Unknown location'
+      }
     })
 
+    // Sort by rating desc and pick top 2
     topWalkers.value = walkersWithAvgStars
       .sort((a, b) => b.avgStars - a.avgStars)
       .slice(0, 2)
+
+    console.log('Top walkers:', topWalkers.value)
   } catch (err: any) {
     console.error(err)
     error.value = 'Failed to load walkers.'
@@ -46,6 +61,8 @@ async function fetchTopWalkers() {
 
 onMounted(fetchTopWalkers)
 </script>
+
+
 
 <template>
   <div class="home-view">
@@ -72,8 +89,12 @@ onMounted(fetchTopWalkers)
           :name="walker.name + ' ' + (walker.surname || '')"
           :experience="walker.description || 'Professional Dog walker'"
           :image="walker.profile_picture || '/assets/default-avatar.png'"
+          :rating="walker.avgStars ?? null"
+          :location="walker.location"
           :reverse="index % 2 === 1"
         />
+
+
 
       </div>
     </section>
